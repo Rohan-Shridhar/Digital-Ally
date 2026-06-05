@@ -1,0 +1,128 @@
+name: Community Automation
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  community-automation:
+    name: Welcome, Label, and Review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ensure ELUSOC label exists
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labelName = 'ELUSOC';
+            const labelConfig = {
+              name: labelName,
+              color: '0E8A16',
+              description: 'ELUSOC Community Contribution'
+            };
+
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: labelName
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ...labelConfig
+                });
+              } else {
+                throw error;
+              }
+            }
+
+      - name: Add ELUSOC label to issue
+        if: ${{ github.event_name == 'issues' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['ELUSOC']
+            });
+
+      - name: Add ELUSOC label to pull request
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['ELUSOC']
+            });
+
+      - name: Welcome on new issue
+        if: ${{ github.event_name == 'issues' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `Thank you for opening this issue! 🎉\n\nThe ELUSOC team appreciates your contribution.\n\nA maintainer will review this issue as soon as possible. In the meantime, feel free to provide additional details, screenshots, logs, or reproduction steps that may help with investigation.\n\nWelcome to the community! 🚀`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Welcome on new pull request
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `Thank you for your contribution! 🚀\n\nYour pull request has been received and is now awaiting review.\n\nA maintainer will review this PR as soon as possible. Please ensure all checks pass and respond to any review feedback promptly.\n\nThank you for helping improve this project! 💙`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
+
+      - name: Request review from maintainer
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reviewer = 'vallabhatech';
+            const prNumber = context.issue.number;
+            const { data: reviews } = await github.rest.pulls.listRequestedReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            const alreadyRequested = reviews.users.some(user => user.login === reviewer);
+            if (alreadyRequested) {
+              return;
+            }
+
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                reviewers: [reviewer]
+              });
+            } catch (error) {
+              core.warning(`Could not request reviewer: ${error.message}`);
+            }
