@@ -21,12 +21,14 @@ jobs:
             const repo = context.repo.repo;
 
             const repoLabels = new Set();
+            const repoLabelsByLowercase = new Map();
             for await (const response of github.paginate.iterator(
               github.rest.issues.listLabelsForRepo,
               { owner, repo, per_page: 100 }
             )) {
               for (const label of response.data) {
                 repoLabels.add(label.name);
+                repoLabelsByLowercase.set(label.name.toLowerCase(), label.name);
               }
             }
 
@@ -75,6 +77,23 @@ jobs:
               return matched;
             };
 
+            const dedupeLabelsCaseInsensitive = (labels) => {
+              const unique = [];
+              const seen = new Set();
+
+              for (const label of labels) {
+                const normalized = label.toLowerCase();
+                if (seen.has(normalized)) {
+                  continue;
+                }
+
+                seen.add(normalized);
+                unique.push(label);
+              }
+
+              return unique;
+            };
+
             const issues = [];
             for await (const response of github.paginate.iterator(
               github.rest.issues.listForRepo,
@@ -93,20 +112,27 @@ jobs:
               stats.issuesScanned += 1;
 
               const existingLabels = Array.isArray(issue.labels) ? issue.labels : [];
-              if (existingLabels.length > 0) {
-                stats.issuesSkipped += 1;
-                core.info(`Skipping #${issue.number} because it already has labels: ${existingLabels.map((label) => label.name).join(', ')}`);
-                continue;
+              if (existingLabels.length === 0) {
+                stats.unlabeledIssuesFound += 1;
               }
 
-              stats.unlabeledIssuesFound += 1;
-
               const text = normalizeText(issue);
-              const labelsToApply = detectLabels(text);
+              const detectedLabels = detectLabels(text);
+
+              const existingLabelNames = existingLabels
+                .map((label) => label.name)
+                .filter(Boolean);
+              const existingLabelNamesLowercase = new Set(existingLabelNames.map((label) => label.toLowerCase()));
+
+              const labelsToApply = dedupeLabelsCaseInsensitive(
+                detectedLabels
+                  .map((label) => repoLabelsByLowercase.get(label.toLowerCase()) || label)
+                  .filter((label) => !existingLabelNamesLowercase.has(label.toLowerCase()))
+              );
 
               if (labelsToApply.length === 0) {
                 stats.issuesSkipped += 1;
-                core.info(`Skipping #${issue.number} because no labels were available to apply.`);
+                core.info(`No new labels needed for #${issue.number}. Existing labels: ${existingLabelNames.join(', ') || 'none'}`);
                 continue;
               }
 
@@ -122,7 +148,7 @@ jobs:
                 applyLabelCount(labelName);
               }
 
-              core.info(`Labeled #${issue.number} with: ${labelsToApply.join(', ')}`);
+              core.info(`Updated #${issue.number} with: ${labelsToApply.join(', ')}. Existing labels preserved: ${existingLabelNames.join(', ') || 'none'}`);
             }
 
             core.info(`Total issues scanned: ${stats.issuesScanned}`);
