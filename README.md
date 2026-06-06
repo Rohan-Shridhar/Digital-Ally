@@ -66,6 +66,12 @@ NAPATA/
 └── vite.config.ts      # Vite configuration
 ```
 
+## 🧩 Architectural diagram
+<img width="8192" height="1783" alt="arch" src="https://github.com/user-attachments/assets/39777d99-e887-4785-9cd3-036b48e1dbea" />
+
+## 🔀 Data flow diagram
+<img width="6818" height="8192" alt="DFD-2026-06-06-051046" src="https://github.com/user-attachments/assets/8834b79b-d627-4a70-9c19-5efe69f842e2" />
+
 ## 💡 Usage
 
 1.  **Enter Business Details**: Provide your name, business name, and contact info.
