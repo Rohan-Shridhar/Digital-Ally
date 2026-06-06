@@ -69,7 +69,7 @@ NAPATA/
 ## 🧩 Architectural diagram
 <img width="1684" height="1022" alt="arch drawio (1)" src="https://github.com/user-attachments/assets/31d4393c-daeb-4be0-98f2-892fbc8684a3" />
 
-## 🔀 Data fkow diagram
+## 🔀 Data flow diagram
 <img width="1712" height="2176" alt="df drawio" src="https://github.com/user-attachments/assets/7e79211d-c884-460a-813a-6a7ce73fbc9c" />
 
 
