@@ -1,12 +1,12 @@
 # Code of Conduct
 
 **Table Of Contents**  
-[Our Pledge](https://github.com/Rohan-Shridhar/Digital-Ally/tree/docs/code-of-conduct-and-license?tab=coc-ov-file#our-pledge)  
-[Our Standards](https://github.com/Rohan-Shridhar/Digital-Ally/tree/docs/code-of-conduct-and-license?tab=coc-ov-file#our-standards)  
-[ELUSOC Community Standards](https://github.com/Rohan-Shridhar/Digital-Ally/tree/docs/code-of-conduct-and-license?tab=coc-ov-file#elusoc-community-standards)  
-[Scope](https://github.com/Rohan-Shridhar/Digital-Ally/tree/docs/code-of-conduct-and-license?tab=coc-ov-file#scope)  
-[Enforcement](https://github.com/Rohan-Shridhar/Digital-Ally/tree/docs/code-of-conduct-and-license?tab=coc-ov-file#enforcement)  
-[Attribution](https://github.com/Rohan-Shridhar/Digital-Ally/tree/docs/code-of-conduct-and-license?tab=coc-ov-file#attribution)  
+[Our Pledge](`#our-pledge`)  
+[Our Standards](`#our-standards`)  
+[ELUSOC Community Standards](`#elusoc-community-standards`)  
+[Scope](`#scope`)  
+[Enforcement](`#enforcement`)  
+[Attribution](`#attribution`)  
 
 ## Our Pledge
 
