@@ -47,11 +47,15 @@ const cleanResponse = (text: string): string => {
 }
 
 async function callProxy(endpoint: string, body: any) {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('sessionToken') : null;
     const clientID = getOrCreateClientID();
     
+    // Use build-time injected token (VITE_CLIENT_TOKEN) as primary auth
+    const clientToken = import.meta.env.VITE_CLIENT_TOKEN || '';
+    
     const headers: Record<string,string> = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (clientToken) {
+            headers['Authorization'] = `Bearer ${clientToken}`;
+        }
     if (clientID) headers['X-Client-ID'] = clientID;
 
     const res = await fetch(endpoint, {

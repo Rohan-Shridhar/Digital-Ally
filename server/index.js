@@ -176,6 +176,9 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Apply auth requirement globally to /api/generate/* routes BEFORE rate limiting
+app.use('/api/generate/', requireAuth);
+
 // Stricter rate limiting for /api/generate/* routes
 const generateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -329,7 +332,7 @@ function hasSpamPatterns(str) {
   return false;
 }
 
-app.post('/api/generate/website', generateLimiter, generateLogger, requireAuth, async (req, res) => {
+app.post('/api/generate/website', generateLimiter, generateLogger, async (req, res) => {
   try {
     const { prompt, outputFormat = 'html' } = req.body; // Default to 'html'
     
@@ -393,7 +396,7 @@ app.post('/api/generate/website', generateLimiter, generateLogger, requireAuth, 
     return res.status(500).json({ error: 'Server error' });
   }
 });
-app.post('/api/generate/newsletter', generateLimiter, generateLogger, requireAuth, async (req, res) => {
+app.post('/api/generate/newsletter', generateLimiter, generateLogger, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt || typeof prompt !== 'string' || prompt.length > 8000) {
@@ -408,7 +411,7 @@ app.post('/api/generate/newsletter', generateLimiter, generateLogger, requireAut
   }
 });
 
-app.post('/api/generate/analysis', generateLimiter, generateLogger, requireAuth, async (req, res) => {
+app.post('/api/generate/analysis', generateLimiter, generateLogger, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt || typeof prompt !== 'string' || prompt.length > 15000) {
