@@ -14,6 +14,10 @@ export const COLOR_PALETTES = [
 
 export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
   'en-US': {
+    dashboardSubtext: 'Manage your business performance and online presence in one place.',
+    websiteManagement: 'Website Management',
+    websiteManagementSubtext: 'View your generated website or make changes to it.',
+    viewWebsite: 'View Website',
     generator: 'Generator',
     dashboard: 'Dashboard',
     examples: 'Examples',
@@ -97,6 +101,11 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     customizeWebsite: 'View & Customize',
   },
   'te-IN': {
+    headline2: 'మీ వెబ్‌సైట్‌ను పొందండి.',
+    dashboardSubtext: 'మీ వ్యాపార పనితీరు మరియు ఆన్‌లైన్ ఉనికిని ఒకే చోట నిర్వహించండి.',
+    websiteManagement: 'వెబ్‌సైట్ నిర్వహణ',
+    websiteManagementSubtext: 'మీరు రూపొందించిన వెబ్‌సైట్‌ను వీక్షించండి లేదా మార్చండి.',
+    viewWebsite: 'వెబ్‌సైట్‌ను వీక్షించండి',
     generator: 'జెనరేటర్',
     dashboard: 'డాష్‌బోర్డ్',
     examples: 'ఉదాహరణలు',
@@ -179,6 +188,11 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     customizeWebsite: 'వీక్షించండి & అనుకూలీకరించండి',
   },
   'hi-IN': {
+    headline2: 'अपनी वेबसाइट पाएं।',
+    dashboardSubtext: 'अपने व्यवसाय के प्रदर्शन और ऑनलाइन उपस्थिति को एक ही जगह प्रबंधित करें।',
+    websiteManagement: 'वेबसाइट प्रबंधन',
+    websiteManagementSubtext: 'अपनी बनाई गई वेबसाइट देखें या उसमें बदलाव करें।',
+    viewWebsite: 'वेबसाइट देखें',
     generator: 'जेनरेटर',
     dashboard: 'डैशबोर्ड',
     examples: 'उदाहरण',
