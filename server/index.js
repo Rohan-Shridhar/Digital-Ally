@@ -281,11 +281,48 @@ async function callGemini(prompt) {
   return response.text || '';
 }
 
+// Utility function to strip non-printable characters
+function stripNonPrintable(str) {
+  return str.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
+
+// Utility function to detect repeated word patterns (spam detection)
+function hasSpamPatterns(str) {
+  const words = str.toLowerCase().split(/\s+/);
+  const wordCounts = new Map();
+
+  for (const word of words) {
+    if (word.length > 0) {
+      wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
+      if (wordCounts.get(word) > 20) {
+        return true; // Word appears more than 20 times
+      }
+    }
+  }
+
+  return false;
+}
+
 app.post('/api/generate/website', generateLimiter, requireAuth, async (req, res) => {
   try {
     const { prompt, outputFormat = 'html' } = req.body; // Default to 'html'
-    if (!prompt || typeof prompt !== 'string' || prompt.length > 10000) {
+    
+    // Validate prompt exists and is a string
+    if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'Invalid prompt' });
+    }
+
+    // Check prompt length (max 5000 chars)
+    if (prompt.length > 5000) {
+      return res.status(400).json({ error: 'Prompt exceeds maximum length of 5000 characters' });
+    }
+
+    // Strip non-printable characters
+    let cleanedPrompt = stripNonPrintable(prompt);
+
+    // Detect spam patterns (same word >20 times)
+    if (hasSpamPatterns(cleanedPrompt)) {
+      return res.status(400).json({ error: 'Prompt contains repeated patterns indicating spam' });
     }
 
     // Validate outputFormat
@@ -294,14 +331,14 @@ app.post('/api/generate/website', generateLimiter, requireAuth, async (req, res)
       return res.status(400).json({ error: `Unsupported output format: '${outputFormat}'. Allowed formats are: ${allowedFormats.join(', ')}` });
     }
 
-    let geminiPrompt = prompt;
+    let geminiPrompt = cleanedPrompt;
     // Prepend system instructions to guide Gemini based on the desired output format
     if (outputFormat === 'react') {
-      geminiPrompt = `Generate a React functional component based on the following description. Ensure the component is self-contained and uses standard React practices. Only return the JSX/TSX code, no extra explanations or markdown formatting outside the component itself:\n\n${prompt}`;
+      geminiPrompt = `Generate a React functional component based on the following description. Ensure the component is self-contained and uses standard React practices. Only return the JSX/TSX code, no extra explanations or markdown formatting outside the component itself:\n\n${cleanedPrompt}`;
     } else if (outputFormat === 'html') {
-      geminiPrompt = `Generate a complete HTML page based on the following description. Only return the HTML code, no extra explanations or markdown formatting outside the HTML itself:\n\n${prompt}`;
+      geminiPrompt = `Generate a complete HTML page based on the following description. Only return the HTML code, no extra explanations or markdown formatting outside the HTML itself:\n\n${cleanedPrompt}`;
     } else if (outputFormat === 'zip') {
-      geminiPrompt = `Generate a complete website (HTML, CSS, and JS) based on: ${prompt}. 
+      geminiPrompt = `Generate a complete website (HTML, CSS, and JS) based on: ${cleanedPrompt}. 
       Return the result ONLY as a valid JSON object where keys are filenames and values are the file contents.
       Example format: {"index.html": "...", "styles.css": "...", "script.js": "..."}
       Do not include any explanations or markdown formatting.`;
