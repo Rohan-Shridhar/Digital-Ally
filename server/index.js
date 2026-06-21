@@ -45,6 +45,106 @@ redis.on('connect', () => {
   console.log('Connected to Redis for quota tracking');
 });
 
+// In-memory request logging and error tracking
+const MAX_LOG_ENTRIES = 1000;
+const ERROR_THRESHOLD = 5; // errors that trigger blocking
+const ERROR_WINDOW = 10 * 60 * 1000; // 10 minutes
+const BLOCK_DURATION = 60 * 60 * 1000; // 1 hour
+
+const requestLog = []; // FIFO log of requests
+const ipErrorCounts = new Map(); // Track errors per IP within time window
+const blockedIPs = new Map(); // Track blocked IPs with unblock time
+
+function addToLog(entry) {
+  requestLog.push(entry);
+  if (requestLog.length > MAX_LOG_ENTRIES) {
+    requestLog.shift(); // Remove oldest entry
+  }
+}
+
+function trackError(ip) {
+  const now = Date.now();
+  if (!ipErrorCounts.has(ip)) {
+    ipErrorCounts.set(ip, []);
+  }
+
+  const errors = ipErrorCounts.get(ip);
+  errors.push(now);
+
+  // Remove errors outside the time window
+  const validErrors = errors.filter((timestamp) => now - timestamp < ERROR_WINDOW);
+  ipErrorCounts.set(ip, validErrors);
+
+  // Check if threshold exceeded and block the IP
+  if (validErrors.length > ERROR_THRESHOLD) {
+    const unblockTime = now + BLOCK_DURATION;
+    blockedIPs.set(ip, unblockTime);
+    console.warn(`IP ${ip} blocked for 1 hour due to ${validErrors.length} errors in 10 minutes`);
+  }
+
+  return validErrors.length;
+}
+
+function isIPBlocked(ip) {
+  if (!blockedIPs.has(ip)) {
+    return false;
+  }
+
+  const unblockTime = blockedIPs.get(ip);
+  if (Date.now() > unblockTime) {
+    blockedIPs.delete(ip);
+    console.log(`IP ${ip} unblocked`);
+    return false;
+  }
+
+  return true;
+}
+
+// Middleware to check if IP is blocked
+function checkIPBlocklist(req, res, next) {
+  const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+  if (isIPBlocked(clientIp)) {
+    return res.status(403).json({ error: 'IP address blocked due to excessive errors' });
+  }
+  next();
+}
+
+// Middleware to log requests and track errors
+function requestLogger(req, res, next) {
+  const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+  const endpoint = req.path;
+  const timestamp = new Date().toISOString();
+  
+  // Extract prompt length from body if present
+  const promptLength = req.body?.prompt?.length || 0;
+
+  // Log the request
+  addToLog({
+    ip: clientIp,
+    endpoint,
+    timestamp,
+    promptLength,
+  });
+
+  // Intercept the response to track errors
+  const originalJson = res.json;
+  res.json = function (data) {
+    const statusCode = res.statusCode;
+    
+    // Track 4xx and 5xx errors (excluding 429 rate limit)
+    if ((statusCode >= 400 && statusCode < 600) && statusCode !== 429) {
+      trackError(clientIp);
+    }
+
+    return originalJson.call(this, data);
+  };
+
+  next();
+}
+
+app.use(checkIPBlocklist);
+app.use(requestLogger);
+
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: '128kb' }));
@@ -261,6 +361,24 @@ app.post('/api/generate/analysis', generateLimiter, requireAuth, async (req, res
 });
 
 app.get('/api/health', (req, res) => res.json({ ok: true, redis: redis.status }));
+
+// Admin endpoint to retrieve request logs and blocked IPs (no auth for monitoring)
+app.get('/api/logs', (req, res) => {
+  res.json({
+    requestLog: requestLog.slice(-100), // Last 100 entries
+    logCount: requestLog.length,
+    blockedIPs: Array.from(blockedIPs.entries()).map(([ip, unblockTime]) => ({
+      ip,
+      unblockTime: new Date(unblockTime).toISOString(),
+    })),
+    errorCounts: Object.fromEntries(
+      Array.from(ipErrorCounts.entries()).map(([ip, errors]) => [
+        ip,
+        { count: errors.length, window: '10 minutes' },
+      ])
+    ),
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`AI proxy server listening on port ${PORT}`);
