@@ -24,6 +24,20 @@ export const OutputPanel: React.FC = () => {
         lang: language 
     });
 
+    // Parse rate limit error and convert to user-friendly message
+    const parseRateLimitError = (errorMsg: string): { isRateLimit: boolean; message: string; retryMinutes: number } => {
+        if (errorMsg.startsWith('RATE_LIMIT_429|')) {
+            const retrySeconds = parseInt(errorMsg.split('|')[1] || '900', 10);
+            const retryMinutes = Math.ceil(retrySeconds / 60);
+            return {
+                isRateLimit: true,
+                message: `You've reached your generation limit. Please try again in ${retryMinutes} ${retryMinutes === 1 ? 'minute' : 'minutes'}.`,
+                retryMinutes,
+            };
+        }
+        return { isRateLimit: false, message: errorMsg, retryMinutes: 0 };
+    };
+
     const handleCopy = useCallback(() => {
         if (!generatedCode) return;
         navigator.clipboard.writeText(generatedCode).then(() => {
@@ -54,33 +68,47 @@ export const OutputPanel: React.FC = () => {
     }, [modificationPrompt, handleAssist, setError]);
 
     if (error && !generatedCode) {
+        const { isRateLimit, message, retryMinutes } = parseRateLimitError(error);
+        
         return (
-            <div className="flex flex-col items-center justify-center h-full text-center text-red-500 p-4">
-                <h3 className="text-xl font-semibold text-red-600 mt-4">{t('generationFailed')}</h3>
-                <p className="mt-2 max-w-prose">{error}</p>
-                {retryCount > 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                <div className={`${isRateLimit ? 'text-yellow-600' : 'text-red-500'}`}>
+                    <h3 className={`text-xl font-semibold ${isRateLimit ? 'text-yellow-600' : 'text-red-600'} mt-4`}>
+                        {isRateLimit ? '⏳ Rate Limit Reached' : t('generationFailed')}
+                    </h3>
+                    <p className={`mt-2 max-w-prose ${isRateLimit ? 'text-yellow-700' : 'text-red-600'}`}>{message}</p>
+                </div>
+                
+                {retryCount > 0 && !isRateLimit && (
                     <p className="text-sm text-gray-600 mt-2">Retry attempt {retryCount} of 3</p>
                 )}
+                
                 <div className="mt-8 flex gap-4 flex-wrap justify-center">
                     <button 
                         onClick={reset} 
-                        className="bg-lime-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-lime-500 transition-all duration-200"
+                        className={`${isRateLimit ? 'bg-yellow-600 hover:bg-yellow-500' : 'bg-lime-600 hover:bg-lime-500'} text-white font-bold py-3 px-8 rounded-lg transition-all duration-200`}
+                        disabled={isRateLimit}
                     >
-                        {t('tryAgain')}
+                        {isRateLimit ? `Try again in ${retryMinutes} ${retryMinutes === 1 ? 'minute' : 'minutes'}` : t('tryAgain')}
                     </button>
-                    <button 
-                        onClick={handleRegenerate}
-                        className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-500 transition-all duration-200"
-                    >
-                        Retry with Modifications
-                    </button>
-                    {retryCount < 3 && (
-                        <button 
-                            onClick={handleRetry}
-                            className="bg-orange-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-orange-500 transition-all duration-200"
-                        >
-                            Retry Last Request ({3 - retryCount} left)
-                        </button>
+                    
+                    {!isRateLimit && (
+                        <>
+                            <button 
+                                onClick={handleRegenerate}
+                                className="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-500 transition-all duration-200"
+                            >
+                                Retry with Modifications
+                            </button>
+                            {retryCount < 3 && (
+                                <button 
+                                    onClick={handleRetry}
+                                    className="bg-orange-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-orange-500 transition-all duration-200"
+                                >
+                                    Retry Last Request ({3 - retryCount} left)
+                                </button>
+                            )}
+                        </>
                     )}
                 </div>
             </div>
