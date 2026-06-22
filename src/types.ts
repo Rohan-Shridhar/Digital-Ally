@@ -1,4 +1,8 @@
 export interface AppContextType {
+  privacyMode: 'remote' | 'local' | null;
+  setPrivacyMode: (mode: 'remote' | 'local') => void;
+  reviewPrivacyChoice: () => void;
+  clearPrivateData: () => void;
   prompt: string;
   setPrompt: (prompt: string) => void;
   userName: string;

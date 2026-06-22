@@ -13,11 +13,10 @@ export const OutputPanel: React.FC = () => {
     
     const [copied, setCopied] = useState(false);
     const [view, setView] = useState<'preview' | 'code'>('preview');
-    const [modificationPrompt, setModificationPrompt] = useState('');
-    
     const { 
         generatedCode, error, t, reset, handleAssist, generatedUrl, newsletter, 
-        isGeneratingPost, handleGenerateNewsletter, language, setError, retryCount, handleRetry
+        isGeneratingPost, handleGenerateNewsletter, language, setError, retryCount, handleRetry,
+        modificationPrompt, setModificationPrompt
     } = context;
 
     const { isListening, error: speechError, toggleListening } = useSpeechToText({ 

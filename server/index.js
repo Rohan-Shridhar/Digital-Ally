@@ -25,6 +25,7 @@ if (!SERVER_CLIENT_TOKEN) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const CONSENT_VERSION = process.env.AI_CONSENT_VERSION || '2026-06-21';
 
 // Initialize Redis client for quota tracking
 const redis = new Redis({
@@ -177,6 +178,11 @@ app.use(requestLogger);
 app.use(helmet());
 app.use(cors());
 app.use(express.json({ limit: '128kb' }));
+app.use('/api/generate/', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, max-age=0');
+  res.set('Pragma', 'no-cache');
+  next();
+});
 
 // UUID validation regex (RFC 4122)
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -316,6 +322,13 @@ function requireAuth(req, res, next) {
   next();
 }
 
+function requireAiConsent(req, res, next) {
+  if (req.get('X-AI-Consent') !== CONSENT_VERSION) {
+    return res.status(428).json({ error: 'Current AI processing consent is required' });
+  }
+  next();
+}
+
 async function callGemini(prompt) {
   const response = await ai.models.generateContent({
     model: MODEL,
@@ -401,7 +414,7 @@ app.post('/api/generate/website', generateLimiter, generateLogger, async (req, r
         const files = JSON.parse(cleanedContent);
         return res.json({ zip: files });
       } catch (parseErr) {
-        console.error('Failed to parse ZIP JSON from Gemini', parseErr);
+        console.error('Failed to parse generated ZIP response');
         // Fallback: return as raw text if parsing fails, so the client can try to handle it
         return res.json({ zip: generatedContent, warning: 'Parsed as raw text' });
       }
@@ -410,11 +423,11 @@ app.post('/api/generate/website', generateLimiter, generateLogger, async (req, r
     // Return the generated content, using the outputFormat as the key in the JSON response
     return res.json({ [outputFormat]: generatedContent.trim() });
   } catch (err) {
-    console.error('Error in /api/generate/website', err);
+    console.error('Website generation failed');
     return res.status(500).json({ error: 'Server error' });
   }
 });
-app.post('/api/generate/newsletter', generateLimiter, generateLogger, async (req, res) => {
+app.post('/api/generate/newsletter', requireAuth, requireAiConsent, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt || typeof prompt !== 'string' || prompt.length > 8000) {
@@ -424,12 +437,12 @@ app.post('/api/generate/newsletter', generateLimiter, generateLogger, async (req
     const text = await callGemini(prompt);
     return res.json({ text });
   } catch (err) {
-    console.error('Error in /api/generate/newsletter', err);
+    console.error('Newsletter generation failed');
     return res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.post('/api/generate/analysis', generateLimiter, generateLogger, async (req, res) => {
+app.post('/api/generate/analysis', requireAuth, requireAiConsent, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt || typeof prompt !== 'string' || prompt.length > 15000) {
@@ -439,7 +452,7 @@ app.post('/api/generate/analysis', generateLimiter, generateLogger, async (req, 
     const text = await callGemini(prompt);
     return res.json({ text });
   } catch (err) {
-    console.error('Error in /api/generate/analysis', err);
+    console.error('Dashboard analysis failed');
     return res.status(500).json({ error: 'Server error' });
   }
 });

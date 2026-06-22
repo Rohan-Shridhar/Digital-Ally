@@ -10,7 +10,10 @@ export const Header: React.FC = () => {
 
   if (!context) return null;
 
-  const { language, setLanguage, t, pageState, setPageState, handleSelectExample } = context;
+  const {
+    language, setLanguage, t, pageState, setPageState, handleSelectExample,
+    privacyMode, setPrivacyMode, reviewPrivacyChoice, clearPrivateData
+  } = context;
 
   const getLinkClasses = (linkState: 'form' | 'dashboard') => {
     const baseClasses = "hover:text-lime-700 transition-colors px-1";
@@ -85,6 +88,28 @@ export const Header: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-6 text-gray-600 font-medium">
+        <label className="flex items-center gap-2 text-sm">
+          <span className={privacyMode === 'local' ? 'text-green-700 font-semibold' : 'text-gray-500'}>Privacy</span>
+          <select
+            value={privacyMode || ''}
+            onChange={(event) => {
+              const nextMode = event.target.value as 'remote' | 'local';
+              if (nextMode === 'remote' && privacyMode !== 'remote') {
+                reviewPrivacyChoice();
+              } else {
+                setPrivacyMode(nextMode);
+              }
+            }}
+            className="rounded-md border border-gray-300 bg-white px-2 py-1"
+            aria-label="AI processing mode"
+          >
+            <option value="remote">Remote AI</option>
+            <option value="local">Local only</option>
+          </select>
+        </label>
+        <button onClick={clearPrivateData} className="text-sm hover:text-red-700" title="Clear form, generated content, and saved privacy choice">
+          Delete my data
+        </button>
         <button onClick={() => setPageState('form')} className={getLinkClasses('form')}>
           {t('generator')}
         </button>

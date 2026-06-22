@@ -13,6 +13,7 @@ Digital Ally (formerly BizBoost) is an advanced AI-powered platform designed to 
 - **Customization**: Choose from curated color palettes and modify generated designs with follow-up prompts.
 - **Multi-Language Support**: Interactive interface supporting multiple languages.
 - **Live Preview & Code Export**: View changes in real-time and export clean, deployment-ready HTML/CSS code.
+- **Privacy Controls**: Versioned consent before remote AI processing, local-only generation, and one-click data deletion.
 
 ## 🛠️ Tech Stack
 
@@ -39,7 +40,8 @@ Digital Ally (formerly BizBoost) is an advanced AI-powered platform designed to 
 3.  **Environment Setup**
     Create a `.env` file in the root directory and add your Google Gemini API key:
     ```env
-    API_KEY=your_google_gemini_api_key_here
+    GEMINI_API_KEY=your_google_gemini_api_key_here
+    SERVER_CLIENT_TOKEN=replace_with_a_long_random_value
     ```
 
 4.  **Run the development server**
@@ -52,6 +54,14 @@ Digital Ally (formerly BizBoost) is an advanced AI-powered platform designed to 
 - `npm run dev`: Starts the development server.
 - `npm run build`: Builds the application for production.
 - `npm run preview`: Locally previews the production build.
+- `npm run start:server`: Starts the authenticated AI proxy.
+
+## Privacy
+
+No business details or generated content are persisted by Digital Ally. Users
+must choose remote AI processing or local-only templates before using
+generation features. See [PRIVACY.md](PRIVACY.md) for the data-flow, retention,
+deletion, logging, and deployment policy.
 
 ## 📂 Project Structure
 

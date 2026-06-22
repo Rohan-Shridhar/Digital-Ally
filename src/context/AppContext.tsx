@@ -1,12 +1,13 @@
-import React, { useState, useCallback, createContext, useContext, useEffect } from 'react';
-import { generateWebsite, generateNewsletter, analyzeAndTranslateDashboard } from '../services/geminiService';
+import React, { useState, useCallback, createContext } from 'react';
+import { generateWebsite, generateNewsletter } from '../services/geminiService';
 import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '../constants';
 import { AppContextType } from '../types';
+import { AiProcessingMode, clearPrivacyPreference, loadPrivacyPreference, savePrivacyPreference } from '../privacy';
 
 export const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log('AppProvider rendering...');
+  const [privacyMode, setPrivacyModeState] = useState<AiProcessingMode | null>(() => loadPrivacyPreference()?.mode || null);
   const [userName, setUserName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [userEmail, setUserEmail] = useState('');
@@ -31,7 +32,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [lastPrompt, setLastPrompt] = useState('');
   const [retryCount, setRetryCount] = useState(0);
 
-  console.log('AppProvider state initialized');
+  const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
+    savePrivacyPreference(mode);
+    setPrivacyModeState(mode);
+    setError(null);
+  }, []);
 
   const t = useCallback((key: string): string => {
     return TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key];
@@ -74,12 +79,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       } else {
         setError(t('updateFailed'));
-        console.warn("Received non-HTML response:", code);
+        console.warn('AI service returned a non-HTML response');
         setGeneratedCode(generatedCode || '');
         setPageState('result');
       }
     } catch (err) {
-      console.error(err);
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(`Failed to generate website: ${errorMessage}`);
       setGeneratedCode(generatedCode || '');
@@ -112,7 +116,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         setNewsletter(newsletterText);
     } catch(err) {
-        console.error(err);
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
         setError(`Failed to generate newsletter: ${errorMessage}`);
     } finally {
@@ -158,9 +161,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Reset retry fields
     setLastPrompt('');
     setRetryCount(0);
+    setServices('');
+    setLocation('');
+    setThemeColor('#10b981');
+  };
+
+  const clearPrivateData = () => {
+    reset();
+    clearPrivacyPreference();
+    setPrivacyModeState(null);
+  };
+
+  const reviewPrivacyChoice = () => {
+    clearPrivacyPreference();
+    setPrivacyModeState(null);
   };
 
   const value = {
+    privacyMode, setPrivacyMode, reviewPrivacyChoice, clearPrivateData,
     prompt, setPrompt, generatedCode, pageState, setPageState, language, setLanguage, error, setError,
     handleGenerate, reset, t, userName, setUserName, businessName, setBusinessName,
     userEmail, setUserEmail, userPhone, setUserPhone, selectedPalette, setSelectedPalette,
@@ -171,6 +189,5 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     lastPrompt, setLastPrompt, retryCount, setRetryCount, handleRetry
   };
 
-  console.log('AppProvider providing context with value:', value);
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

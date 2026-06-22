@@ -42,9 +42,7 @@ export const DashboardPage: React.FC = () => {
     try {
         const mockDashboardData = `
         Business: ${businessName}
-        Owner: ${userName}
         Website Status: ${generatedCode ? 'Generated' : 'Not Generated'}
-        Contact: ${userEmail}, ${userPhone}
         Recent Activity: Website generation completed
         `;
         
@@ -59,7 +57,6 @@ export const DashboardPage: React.FC = () => {
             speak(analysis, language);
         }
     } catch (err) {
-        console.error(err);
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
         setError(`Failed to analyze dashboard: ${errorMessage}`);
     } finally {
