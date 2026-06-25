@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useMemo } from 'react';
+import { sanitizePreviewHtml } from '../utils/sanitize';
 import { AppContext } from '../context/AppContext';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 import { 
@@ -18,6 +19,11 @@ export const OutputPanel: React.FC = () => {
         isGeneratingPost, handleGenerateNewsletter, language, setError, retryCount, handleRetry,
         modificationPrompt, setModificationPrompt
     } = context;
+
+    const { html: safeHtml, hadUnsafeContent } = useMemo(
+        () => sanitizePreviewHtml(generatedCode || ''),
+        [generatedCode]
+    );
 
     const { isListening, error: speechError, toggleListening } = useSpeechToText({ 
         onTranscript: setModificationPrompt, 
@@ -158,12 +164,19 @@ export const OutputPanel: React.FC = () => {
                     </div>
                 </div>
                 {view === 'preview' ? (
-                    <iframe
-                        srcDoc={generatedCode}
-                        title="Website Preview"
-                        className="w-full h-full border-none bg-white"
-                        sandbox="allow-scripts allow-same-origin"
-                    />
+                    <>
+                        {hadUnsafeContent && (
+                            <div className="flex-shrink-0 bg-yellow-100 border-b border-yellow-300 text-yellow-800 text-xs px-4 py-1.5">
+                                ⚠️ Unsafe content was detected and removed from this preview.
+                            </div>
+                        )}
+                        <iframe
+                            srcDoc={safeHtml}
+                            title="Website Preview"
+                            className="w-full h-full border-none bg-white"
+                            sandbox="allow-same-origin"
+                        />
+                    </>
                 ) : (
                     <div className="w-full h-full bg-gray-900 p-4 overflow-auto">
                         <pre className="text-sm text-gray-200 whitespace-pre-wrap">
