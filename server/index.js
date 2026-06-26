@@ -231,6 +231,14 @@ const MONTHLY_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
 
 async function quotaMiddleware(req, res, next) {
   try {
+    
+    // Admin-bypass
+    // If a valid admin token is provided, skip all quota checks entirely
+    const adminToken = req.get('X-Admin-Token');
+    if (adminToken && adminToken === process.env.ADMIN_TOKEN) {
+      return next();
+    }
+
     // Prioritize X-Client-ID header (session fingerprint), fall back to IP
     let quotaKey = req.get('X-Client-ID');
     if (!quotaKey || !isValidUUID(quotaKey)) {
@@ -301,6 +309,12 @@ async function quotaMiddleware(req, res, next) {
       quotaKey: quotaKey,
     };
 
+    // Inform clients of their current quota status on every successful request
+    res.set('X-RateLimit-Daily-Limit', DAILY_QUOTA);
+    res.set('X-RateLimit-Daily-Remaining', Math.max(0, DAILY_QUOTA - dailyIncr));
+    res.set('X-RateLimit-Monthly-Limit', MONTHLY_QUOTA);
+    res.set('X-RateLimit-Monthly-Remaining', Math.max(0, MONTHLY_QUOTA - monthlyIncr));
+    
     next();
   } catch (error) {
     console.error('Error in quota middleware:', error);
@@ -363,7 +377,7 @@ function hasSpamPatterns(str) {
   return false;
 }
 
-app.post('/api/generate/website', generateLimiter, generateLogger, async (req, res) => {
+app.post('/api/generate/website',requireAuth, requireAiConsent, generateLimiter, generateLogger, async (req, res) => {
   try {
     const { prompt, outputFormat = 'html' } = req.body; // Default to 'html'
     
