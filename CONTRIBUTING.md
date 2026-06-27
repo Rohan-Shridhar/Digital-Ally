@@ -29,7 +29,7 @@ Please be respectful and inclusive. We follow the GitHub Community Guidelines.
 If you assign yourself to an issue, please post a brief update within 20 hours.
 After 24 hours of inactivity, the assignee may be removed so others can help.
 
-Check out `issues.md` file for issues.
+Check out [issues.md](issues.md) file for issues.
 
 ## ELUSOC Onboarding
 
