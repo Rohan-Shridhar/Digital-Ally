@@ -7,6 +7,7 @@ import { GoogleGenAI } from '@google/genai';
 import Redis from 'ioredis';
 import cron from 'node-cron';
 import { createLogger } from './logger.js';
+import { queryRequestLogs } from './logQuery.js';
 
 dotenv.config();
 
@@ -500,20 +501,29 @@ app.get('/api/usage', async (req, res) => {
 
 // Admin endpoint to retrieve request logs and blocked IPs (no auth for monitoring)
 app.get('/api/logs', (req, res) => {
-  res.json({
-    requestLog: requestLog.slice(-100), // Last 100 entries
-    logCount: requestLog.length,
-    blockedIPs: Array.from(blockedIPs.entries()).map(([ip, unblockTime]) => ({
-      ip,
-      unblockTime: new Date(unblockTime).toISOString(),
-    })),
-    errorCounts: Object.fromEntries(
-      Array.from(ipErrorCounts.entries()).map(([ip, errors]) => [
+  try {
+    const logQuery = queryRequestLogs(requestLog, req.query);
+    return res.json({
+      requestLog: logQuery.entries,
+      logCount: logQuery.total,
+      returned: logQuery.returned,
+      limit: logQuery.limit,
+      filters: logQuery.filters,
+      sort: logQuery.sort,
+      blockedIPs: Array.from(blockedIPs.entries()).map(([ip, unblockTime]) => ({
         ip,
-        { count: errors.length, window: '10 minutes' },
-      ])
-    ),
-  });
+        unblockTime: new Date(unblockTime).toISOString(),
+      })),
+      errorCounts: Object.fromEntries(
+        Array.from(ipErrorCounts.entries()).map(([ip, errors]) => [
+          ip,
+          { count: errors.length, window: '10 minutes' },
+        ])
+      ),
+    });
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
 });
 
 app.listen(PORT, () => {
