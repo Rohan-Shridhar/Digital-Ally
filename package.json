@@ -8,7 +8,8 @@
     "build": "npm run check:translations && vite build",
     "check:translations": "node scripts/check-translations.mjs",
     "preview": "vite preview",
-    "start:server": "node server/index.js"
+    "start:server": "node server/index.js",
+    "test": "node --test server/pagination.test.js"
   },
   "dependencies": {
     "@google/genai": "^1.12.0",

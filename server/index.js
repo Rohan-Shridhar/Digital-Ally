@@ -508,6 +508,7 @@ app.get('/api/logs', (req, res) => {
       logCount: logQuery.total,
       returned: logQuery.returned,
       limit: logQuery.limit,
+      pagination: logQuery.pagination,
       filters: logQuery.filters,
       sort: logQuery.sort,
       blockedIPs: Array.from(blockedIPs.entries()).map(([ip, unblockTime]) => ({
