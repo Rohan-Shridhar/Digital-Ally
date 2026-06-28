@@ -79,6 +79,10 @@ async function callProxy(endpoint: string, body: any) {
     }
 
     const data = await res.json();
+    // New envelope contract: { data, meta, error }
+    if (data?.error?.message) {
+        throw new Error(data.error.message);
+    }
     return data;
 }
 
