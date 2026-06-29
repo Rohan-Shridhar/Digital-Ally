@@ -49,7 +49,6 @@ function normalizeError(err) {
   return { code: 'UNKNOWN_ERROR', message: 'Unknown error', details: err?.details };
 }
 
-
 const PORT = process.env.PORT || 5174;
 
 if (!process.env.GEMINI_API_KEY) {
@@ -59,7 +58,9 @@ if (!process.env.GEMINI_API_KEY) {
 
 const SERVER_CLIENT_TOKEN = process.env.SERVER_CLIENT_TOKEN || null;
 if (!SERVER_CLIENT_TOKEN) {
-  console.warn('WARNING: SERVER_CLIENT_TOKEN not set. Requests without Authorization will be rejected.');
+  console.warn(
+    'WARNING: SERVER_CLIENT_TOKEN not set. Requests without Authorization will be rejected.'
+  );
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -90,21 +91,25 @@ redis.on('connect', () => {
 });
 
 // Schedule a midnight UTC job to clear yesterday's daily counters
-cron.schedule('0 0 * * *', async () => {
-  try {
-    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // YYYY-MM-DD
-    const pattern = `quota:daily:*:${yesterday}`;
-    const keys = await redis.keys(pattern);
-    if (keys && keys.length) {
-      await redis.del(...keys);
-      console.log(`Cleared ${keys.length} daily quota keys for ${yesterday}`);
-    } else {
-      console.log(`No daily quota keys to clear for ${yesterday}`);
+cron.schedule(
+  '0 0 * * *',
+  async () => {
+    try {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // YYYY-MM-DD
+      const pattern = `quota:daily:*:${yesterday}`;
+      const keys = await redis.keys(pattern);
+      if (keys && keys.length) {
+        await redis.del(...keys);
+        console.log(`Cleared ${keys.length} daily quota keys for ${yesterday}`);
+      } else {
+        console.log(`No daily quota keys to clear for ${yesterday}`);
+      }
+    } catch (err) {
+      console.error('Error during scheduled daily quota reset:', err);
     }
-  } catch (err) {
-    console.error('Error during scheduled daily quota reset:', err);
-  }
-}, { timezone: 'UTC' });
+  },
+  { timezone: 'UTC' }
+);
 
 // In-memory request logging and error tracking
 const MAX_LOG_ENTRIES = 1000;
@@ -185,7 +190,7 @@ function requestLogger(req, res, next) {
 
   const endpoint = req.path;
   const timestamp = new Date().toISOString();
-  
+
   // Extract prompt length from body if present
   const promptLength = req.body?.prompt?.length || 0;
 
@@ -201,9 +206,9 @@ function requestLogger(req, res, next) {
   const originalJson = res.json;
   res.json = function (data) {
     const statusCode = res.statusCode;
-    
+
     // Track 4xx and 5xx errors (excluding 429 rate limit)
-    if ((statusCode >= 400 && statusCode < 600) && statusCode !== 429) {
+    if (statusCode >= 400 && statusCode < 600 && statusCode !== 429) {
       trackError(clientIdentifier);
     }
 
@@ -257,7 +262,10 @@ function setDeprecatedApiHeaders(successorPath) {
 }
 
 app.use(`/api/${API_VERSION}`, setApiVersionHeader);
-app.use(['/api/generate/', '/api/health', '/api/usage', '/api/logs'], setDeprecatedApiHeaders(`/api/${API_VERSION}`));
+app.use(
+  ['/api/generate/', '/api/health', '/api/usage', '/api/logs'],
+  setDeprecatedApiHeaders(`/api/${API_VERSION}`)
+);
 
 // Apply auth requirement globally to /api/generate/* routes BEFORE route handlers
 app.use(['/api/generate/', `/api/${API_VERSION}/generate/`], requireAuth);
@@ -290,7 +298,6 @@ const MONTHLY_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
 
 async function quotaMiddleware(req, res, next) {
   try {
-    
     // Admin-bypass
     // If a valid admin token is provided, skip all quota checks entirely
     const adminToken = req.get('X-Admin-Token');
@@ -324,7 +331,7 @@ async function quotaMiddleware(req, res, next) {
     pipeline.expire(monthlyKey, MONTHLY_TTL);
 
     const results = await pipeline.exec();
-    
+
     if (!results) {
       console.warn('Redis pipeline failed');
       return next();
@@ -336,29 +343,23 @@ async function quotaMiddleware(req, res, next) {
     // Check daily quota
     if (dailyIncr > DAILY_QUOTA) {
       const retryAfter = DAILY_TTL;
-      return res
-        .status(429)
-        .set('Retry-After', retryAfter.toString())
-        .json({
-          error: 'Daily quota exceeded',
-          quotaLimit: DAILY_QUOTA,
-          quotaUsed: dailyIncr,
-          retryAfter: retryAfter,
-        });
+      return res.status(429).set('Retry-After', retryAfter.toString()).json({
+        error: 'Daily quota exceeded',
+        quotaLimit: DAILY_QUOTA,
+        quotaUsed: dailyIncr,
+        retryAfter: retryAfter,
+      });
     }
 
     // Check monthly quota
     if (monthlyIncr > MONTHLY_QUOTA) {
       const retryAfter = MONTHLY_TTL;
-      return res
-        .status(429)
-        .set('Retry-After', retryAfter.toString())
-        .json({
-          error: 'Monthly quota exceeded',
-          quotaLimit: MONTHLY_QUOTA,
-          quotaUsed: monthlyIncr,
-          retryAfter: retryAfter,
-        });
+      return res.status(429).set('Retry-After', retryAfter.toString()).json({
+        error: 'Monthly quota exceeded',
+        quotaLimit: MONTHLY_QUOTA,
+        quotaUsed: monthlyIncr,
+        retryAfter: retryAfter,
+      });
     }
 
     // Attach quota info to request for logging
@@ -373,7 +374,7 @@ async function quotaMiddleware(req, res, next) {
     res.set('X-RateLimit-Daily-Remaining', Math.max(0, DAILY_QUOTA - dailyIncr));
     res.set('X-RateLimit-Monthly-Limit', MONTHLY_QUOTA);
     res.set('X-RateLimit-Monthly-Remaining', Math.max(0, MONTHLY_QUOTA - monthlyIncr));
-    
+
     next();
   } catch (error) {
     console.error('Error in quota middleware:', error);
@@ -389,7 +390,8 @@ function requireAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth) return res.status(401).json({ error: 'Missing Authorization header' });
   const parts = auth.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') return res.status(401).json({ error: 'Malformed Authorization header' });
+  if (parts.length !== 2 || parts[0] !== 'Bearer')
+    return res.status(401).json({ error: 'Malformed Authorization header' });
   const token = parts[1];
   if (token !== SERVER_CLIENT_TOKEN) return res.status(403).json({ error: 'Forbidden' });
   next();
@@ -409,7 +411,7 @@ async function callGemini(prompt) {
     config: {
       temperature: 0.7,
       topP: 0.95,
-    }
+    },
   });
   return response.text || '';
 }
@@ -439,7 +441,7 @@ function hasSpamPatterns(str) {
 async function handleWebsiteGeneration(req, res) {
   try {
     const { prompt, outputFormat = 'html' } = req.body; // Default to 'html'
-    
+
     // Validate prompt exists and is a string
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ error: 'Invalid prompt' });
@@ -461,7 +463,9 @@ async function handleWebsiteGeneration(req, res) {
     // Validate outputFormat
     const allowedFormats = ['html', 'react', 'zip']; // Enabled 'zip' support
     if (!allowedFormats.includes(outputFormat)) {
-      return res.status(400).json({ error: `Unsupported output format: '${outputFormat}'. Allowed formats are: ${allowedFormats.join(', ')}` });
+      return res.status(400).json({
+        error: `Unsupported output format: '${outputFormat}'. Allowed formats are: ${allowedFormats.join(', ')}`,
+      });
     }
 
     let geminiPrompt = cleanedPrompt;
@@ -554,10 +558,7 @@ async function handleUsage(req, res) {
     const dailyKey = `quota:daily:${clientId}:${today}`;
     const monthlyKey = `quota:monthly:${clientId}:${monthKey}`;
 
-    const [dailyVal, monthlyVal] = await Promise.all([
-      redis.get(dailyKey),
-      redis.get(monthlyKey),
-    ]);
+    const [dailyVal, monthlyVal] = await Promise.all([redis.get(dailyKey), redis.get(monthlyKey)]);
 
     const requestsToday = parseInt(dailyVal || '0', 10);
     const monthlyUsage = parseInt(monthlyVal || '0', 10);
@@ -602,7 +603,12 @@ function handleLogs(req, res) {
   }
 }
 
-app.post(`/api/${API_VERSION}/generate/website`, generateLimiter, generateLogger, handleWebsiteGeneration);
+app.post(
+  `/api/${API_VERSION}/generate/website`,
+  generateLimiter,
+  generateLogger,
+  handleWebsiteGeneration
+);
 app.post('/api/generate/website', generateLimiter, generateLogger, handleWebsiteGeneration);
 
 app.post(`/api/${API_VERSION}/generate/newsletter`, requireAiConsent, handleNewsletterGeneration);

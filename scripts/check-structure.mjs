@@ -23,8 +23,12 @@ const removedPaths = [
   'src/services/geminiService.ts',
 ];
 
-const missing = requiredPaths.filter((filePath) => !existsSync(new URL(`../${filePath}`, import.meta.url)));
-const stillPresent = removedPaths.filter((filePath) => existsSync(new URL(`../${filePath}`, import.meta.url)));
+const missing = requiredPaths.filter(
+  (filePath) => !existsSync(new URL(`../${filePath}`, import.meta.url))
+);
+const stillPresent = removedPaths.filter((filePath) =>
+  existsSync(new URL(`../${filePath}`, import.meta.url))
+);
 
 if (missing.length || stillPresent.length) {
   if (missing.length) {

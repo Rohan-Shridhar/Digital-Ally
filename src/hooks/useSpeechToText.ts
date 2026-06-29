@@ -32,14 +32,14 @@ interface SpeechRecognitionErrorEvent extends Event {
 }
 declare global {
   interface Window {
-    SpeechRecognition: { new(): SpeechRecognition };
-    webkitSpeechRecognition: { new(): SpeechRecognition };
+    SpeechRecognition: { new (): SpeechRecognition };
+    webkitSpeechRecognition: { new (): SpeechRecognition };
   }
 }
 
 interface SpeechToTextOptions {
-    onTranscript: (transcript: string) => void;
-    lang: string;
+  onTranscript: (transcript: string) => void;
+  lang: string;
 }
 
 export const useSpeechToText = ({ onTranscript, lang }: SpeechToTextOptions) => {
@@ -101,12 +101,12 @@ export const useSpeechToText = ({ onTranscript, lang }: SpeechToTextOptions) => 
         setIsListening(true);
         setError(null);
       } catch (e) {
-        console.error("Could not start recognition:", e);
-        setError("Could not start speech recognition. Please check microphone permissions.");
+        console.error('Could not start recognition:', e);
+        setError('Could not start speech recognition. Please check microphone permissions.');
         setIsListening(false);
       }
     }
   }, [isListening]);
-  
+
   return { isListening, error, toggleListening };
 };
