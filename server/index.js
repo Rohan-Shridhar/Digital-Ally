@@ -12,6 +12,44 @@ import { queryRequestLogs } from './logQuery.js';
 dotenv.config();
 
 const app = express();
+
+function sendSuccess(res, statusCode, data, meta = null) {
+  return res.status(statusCode).json({
+    data: data ?? null,
+    meta: meta ?? null,
+    error: null,
+  });
+}
+
+function sendError(res, statusCode, code, message, details = null, meta = null) {
+  return res.status(statusCode).json({
+    data: null,
+    meta: meta ?? null,
+    error: {
+      code,
+      message,
+      ...(details ? { details } : {}),
+    },
+  });
+}
+
+function normalizeError(err) {
+  if (!err) return { code: 'UNKNOWN_ERROR', message: 'Unknown error' };
+  if (typeof err === 'string') return { code: 'UNKNOWN_ERROR', message: err };
+  if (err.code && err.message) {
+    return {
+      code: err.code,
+      message: err.message,
+      details: err.details,
+    };
+  }
+  if (err.message) {
+    return { code: 'UNKNOWN_ERROR', message: err.message, details: err.details };
+  }
+  return { code: 'UNKNOWN_ERROR', message: 'Unknown error', details: err?.details };
+}
+
+
 const PORT = process.env.PORT || 5174;
 
 if (!process.env.GEMINI_API_KEY) {
@@ -132,7 +170,7 @@ function checkIPBlocklist(req, res, next) {
   }
 
   if (isIPBlocked(clientIdentifier)) {
-    return res.status(403).json({ error: 'IP address blocked due to excessive errors' });
+    return sendError(res, 403, 'IP_BLOCKED', 'IP address blocked due to excessive errors');
   }
   next();
 }

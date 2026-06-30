@@ -7,8 +7,11 @@
     "dev": "vite",
     "build": "npm run check:translations && vite build",
     "check:translations": "node scripts/check-translations.mjs",
+    "lint": "npm run lint:structure && eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
     "lint:structure": "node scripts/check-structure.mjs",
     "lint:architecture": "node scripts/check-structure.mjs",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "start:server": "node server/index.js",
     "test:unit": "vitest run",
@@ -31,6 +34,7 @@
     "react-router-dom": "^6.30.3"
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -42,5 +46,20 @@
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^4.1.9"
+=======
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "typescript": "~5.8.2",
+    "typescript-eslint": "^8.18.1",
+    "vite": "^6.2.0"
+>>>>>>> upstream/main
   }
 }

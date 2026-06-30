@@ -260,8 +260,9 @@ This project is licensed under the MIT License.
 ## Organization Notes
 
 - `src/app` contains the application shell and context providers.
-- `src/features` contains feature-specific services and workflows.
+
 - `src/shared` contains cross-cutting constants, types, and privacy helpers.
+- `src/features` contains feature-specific services and workflows.
 - React components use `PascalCase`.
 - Shared utilities and services use `camelCase`.
 - Shared barrel modules may use descriptive names like `IconSet.tsx` when they re-export a group of helpers.
