@@ -1,6 +1,6 @@
 name: Documentation Request
 description: Report documentation gaps or improvements.
-title: "[Docs]: "
+title: '[Docs]: '
 labels: [ELUSOC, documentation]
 body:
   - type: markdown
@@ -12,7 +12,7 @@ body:
     attributes:
       label: Documentation location
       description: Which page or file needs improvement?
-      placeholder: "README.md, /docs/getting-started, etc."
+      placeholder: 'README.md, /docs/getting-started, etc.'
     validations:
       required: true
   - type: textarea

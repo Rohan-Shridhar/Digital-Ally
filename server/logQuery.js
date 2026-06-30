@@ -15,7 +15,11 @@ function normalizeString(value) {
   return String(normalized).trim();
 }
 
-function parseIntegerParam(value, name, { min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY } = {}) {
+function parseIntegerParam(
+  value,
+  name,
+  { min = Number.NEGATIVE_INFINITY, max = Number.POSITIVE_INFINITY } = {}
+) {
   const normalized = normalizeString(value);
   if (!normalized) {
     return { value: null };
@@ -64,7 +68,9 @@ function encodeCursor(index) {
 function decodeCursor(cursor) {
   const normalized = cursor.replace(/-/g, '+').replace(/_/g, '/');
   const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
-  const decoded = Buffer.from(normalized + padding, 'base64').toString('utf8').trim();
+  const decoded = Buffer.from(normalized + padding, 'base64')
+    .toString('utf8')
+    .trim();
   const parsed = Number(decoded);
 
   if (!Number.isInteger(parsed) || parsed < 0) {
@@ -129,7 +135,12 @@ export function queryRequestLogs(logs, query = {}) {
       return false;
     }
 
-    if (endpoint && !String(entry.endpoint || '').toLowerCase().includes(endpoint.toLowerCase())) {
+    if (
+      endpoint &&
+      !String(entry.endpoint || '')
+        .toLowerCase()
+        .includes(endpoint.toLowerCase())
+    ) {
       return false;
     }
 

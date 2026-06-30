@@ -2,12 +2,19 @@ import React, { useState, useCallback, createContext } from 'react';
 import { generateWebsite, generateNewsletter } from '@/features/generation/geminiService';
 import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '@/shared/constants';
 import { AppContextType } from '@/shared/types';
-import { AiProcessingMode, clearPrivacyPreference, loadPrivacyPreference, savePrivacyPreference } from '@/shared/privacy';
+import {
+  AiProcessingMode,
+  clearPrivacyPreference,
+  loadPrivacyPreference,
+  savePrivacyPreference,
+} from '@/shared/privacy';
 
 export const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [privacyMode, setPrivacyModeState] = useState<AiProcessingMode | null>(() => loadPrivacyPreference()?.mode || null);
+  const [privacyMode, setPrivacyModeState] = useState<AiProcessingMode | null>(
+    () => loadPrivacyPreference()?.mode || null
+  );
   const [userName, setUserName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [userEmail, setUserEmail] = useState('');
@@ -22,12 +29,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [pageState, setPageState] = useState<'form' | 'loading' | 'result' | 'dashboard'>('form');
   const [language, setLanguage] = useState(LANGUAGES[0].value);
   const [error, setError] = useState<string | null>(null);
-  
+
   // New fields for enhanced InputPanel
   const [services, setServices] = useState('');
   const [location, setLocation] = useState('');
   const [themeColor, setThemeColor] = useState('#10b981');
-  
+
   // Retry system fields
   const [lastPrompt, setLastPrompt] = useState('');
   const [retryCount, setRetryCount] = useState(0);
@@ -38,71 +45,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setError(null);
   }, []);
 
-  const t = useCallback((key: string): string => {
-    return TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key];
-  }, [language]);
+  const t = useCallback(
+    (key: string): string => {
+      return TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key];
+    },
+    [language]
+  );
 
-  const handleGenerateWrapper = useCallback(async (options?: { modPrompt?: string }) => {
-    if (!prompt.trim() || !userName.trim() || !businessName.trim() || !selectedPalette) {
-      setError(t('errorFormNotComplete'));
-      return;
-    }
-    
-    // Store the current prompt for retry functionality
-    setLastPrompt(prompt);
-    setPageState('loading');
-    setError(null);
-    setGeneratedUrl('');
-    setNewsletter('');
+  const handleGenerateWrapper = useCallback(
+    async (options?: { modPrompt?: string }) => {
+      if (!prompt.trim() || !userName.trim() || !businessName.trim() || !selectedPalette) {
+        setError(t('errorFormNotComplete'));
+        return;
+      }
 
-    const modPrompt = options?.modPrompt;
-    
-    try {
-      const paletteDetails = COLOR_PALETTES.find(p => p.name === selectedPalette)?.description || '';
-      const code = await generateWebsite({
-        description: prompt,
-        userName,
-        businessName,
-        userEmail,
-        userPhone,
-        paletteName: selectedPalette,
-        paletteDetails,
-        modificationPrompt: modPrompt,
-      });
-      if (code.trim().toLowerCase().startsWith('<!doctype html')) {
-        setGeneratedCode(code);
-        setPageState('result');
-        const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
-        setGeneratedUrl(dataUrl);
-        // Reset retry count on successful generation
-        setRetryCount(0);
+      // Store the current prompt for retry functionality
+      setLastPrompt(prompt);
+      setPageState('loading');
+      setError(null);
+      setGeneratedUrl('');
+      setNewsletter('');
 
-      } else {
-        setError(t('updateFailed'));
-        console.warn('AI service returned a non-HTML response');
+      const modPrompt = options?.modPrompt;
+
+      try {
+        const paletteDetails =
+          COLOR_PALETTES.find((p) => p.name === selectedPalette)?.description || '';
+        const code = await generateWebsite({
+          description: prompt,
+          userName,
+          businessName,
+          userEmail,
+          userPhone,
+          paletteName: selectedPalette,
+          paletteDetails,
+          modificationPrompt: modPrompt,
+        });
+        if (code.trim().toLowerCase().startsWith('<!doctype html')) {
+          setGeneratedCode(code);
+          setPageState('result');
+          const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(code)}`;
+          setGeneratedUrl(dataUrl);
+          // Reset retry count on successful generation
+          setRetryCount(0);
+        } else {
+          setError(t('updateFailed'));
+          console.warn('AI service returned a non-HTML response');
+          setGeneratedCode(generatedCode || '');
+          setPageState('result');
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+        setError(`Failed to generate website: ${errorMessage}`);
         setGeneratedCode(generatedCode || '');
         setPageState('result');
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setError(`Failed to generate website: ${errorMessage}`);
-      setGeneratedCode(generatedCode || '');
-      setPageState('result');
-      // Increment retry count on failure
-      setRetryCount(prev => prev + 1);
-    } finally {
+        // Increment retry count on failure
+        setRetryCount((prev) => prev + 1);
+      } finally {
         if (modPrompt) setModificationPrompt('');
-    }
-  }, [prompt, userName, businessName, userEmail, userPhone, selectedPalette, generatedCode, t]);
-  
-  const handleGenerate = () => handleGenerateWrapper();
-  
-  const handleAssist = useCallback(async () => {
-      if (!modificationPrompt.trim()) {
-          setError(t('errorAssistant'));
-          return;
       }
-      handleGenerateWrapper({ modPrompt: modificationPrompt });
+    },
+    [prompt, userName, businessName, userEmail, userPhone, selectedPalette, generatedCode, t]
+  );
+
+  const handleGenerate = () => handleGenerateWrapper();
+
+  const handleAssist = useCallback(async () => {
+    if (!modificationPrompt.trim()) {
+      setError(t('errorAssistant'));
+      return;
+    }
+    handleGenerateWrapper({ modPrompt: modificationPrompt });
   }, [modificationPrompt, handleGenerateWrapper, t]);
 
   const handleGenerateNewsletter = useCallback(async () => {
@@ -110,16 +123,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsGeneratingPost(true);
     setError(null);
     try {
-        const newsletterText = await generateNewsletter({
-            description: prompt,
-            businessName,
-        });
-        setNewsletter(newsletterText);
-    } catch(err) {
-        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-        setError(`Failed to generate newsletter: ${errorMessage}`);
+      const newsletterText = await generateNewsletter({
+        description: prompt,
+        businessName,
+      });
+      setNewsletter(newsletterText);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(`Failed to generate newsletter: ${errorMessage}`);
     } finally {
-        setIsGeneratingPost(false);
+      setIsGeneratingPost(false);
     }
   }, [prompt, businessName, generatedUrl]);
 
@@ -178,15 +191,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const value = {
-    privacyMode, setPrivacyMode, reviewPrivacyChoice, clearPrivateData,
-    prompt, setPrompt, generatedCode, pageState, setPageState, language, setLanguage, error, setError,
-    handleGenerate, reset, t, userName, setUserName, businessName, setBusinessName,
-    userEmail, setUserEmail, userPhone, setUserPhone, selectedPalette, setSelectedPalette,
-    modificationPrompt, setModificationPrompt, handleAssist, generatedUrl, newsletter, 
-    isGeneratingPost, handleGenerateNewsletter, handleSelectExample,
+    privacyMode,
+    setPrivacyMode,
+    reviewPrivacyChoice,
+    clearPrivateData,
+    prompt,
+    setPrompt,
+    generatedCode,
+    pageState,
+    setPageState,
+    language,
+    setLanguage,
+    error,
+    setError,
+    handleGenerate,
+    reset,
+    t,
+    userName,
+    setUserName,
+    businessName,
+    setBusinessName,
+    userEmail,
+    setUserEmail,
+    userPhone,
+    setUserPhone,
+    selectedPalette,
+    setSelectedPalette,
+    modificationPrompt,
+    setModificationPrompt,
+    handleAssist,
+    generatedUrl,
+    newsletter,
+    isGeneratingPost,
+    handleGenerateNewsletter,
+    handleSelectExample,
     // New fields
-    services, setServices, location, setLocation, themeColor, setThemeColor,
-    lastPrompt, setLastPrompt, retryCount, setRetryCount, handleRetry
+    services,
+    setServices,
+    location,
+    setLocation,
+    themeColor,
+    setThemeColor,
+    lastPrompt,
+    setLastPrompt,
+    retryCount,
+    setRetryCount,
+    handleRetry,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

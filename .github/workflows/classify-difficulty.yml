@@ -26,7 +26,7 @@ jobs:
               veteran: { color: 'B60205', description: 'Requires advanced knowledge and experience' },
               question: { color: 'D876E3', description: 'Questions, help requests, and discussions' }
             };
-            
+
             // Statistics
             let totalItems = 0;
             let totalIssues = 0;
@@ -210,7 +210,7 @@ jobs:
             // Generate summary
             const summary = `
             ## Issue Difficulty Classification Summary
-            
+
             - **Total Items Scanned:** ${totalItems}
             - **Total Issues Scanned:** ${totalIssues}
             - **Pull Requests Ignored:** ${pullRequestsIgnored}
@@ -218,27 +218,27 @@ jobs:
             - **Newly Classified Issues:** ${issuesClassified}
             - **Labels Auto-Created:** ${labelsCreated}
             - **Processing Errors:** ${processingErrors}
-            
+
             ### Labels Applied
-            
+
             - **newbie:** ${labelCounts.newbie}
             - **adventure:** ${labelCounts.adventure}
             - **veteran:** ${labelCounts.veteran}
             - **question:** ${labelCounts.question}
-            
+
             ${createdLabels.length > 0 ? `
             ### Labels Auto-Created
-            
+
             The following labels were automatically created:
-            
+
             ${createdLabels.map(label => `- \`${label}\``).join('\n')}
             ` : ''}
-            
+
             ${errorLog.length > 0 ? `
             ### Processing Errors
-            
+
             The following errors occurred during processing:
-            
+
             ${errorLog.map(error => `- ${error}`).join('\n')}
             ` : ''}
             `;

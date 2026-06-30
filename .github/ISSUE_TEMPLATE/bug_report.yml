@@ -1,6 +1,6 @@
 name: Bug Report
 description: Report something that is not working as expected.
-title: "[Bug]: "
+title: '[Bug]: '
 labels: [ELUSOC, bug]
 body:
   - type: markdown
@@ -31,7 +31,7 @@ body:
     attributes:
       label: Environment
       description: Add relevant environment details.
-      placeholder: "OS, browser, Node.js version, etc."
+      placeholder: 'OS, browser, Node.js version, etc.'
     validations:
       required: false
   - type: textarea
