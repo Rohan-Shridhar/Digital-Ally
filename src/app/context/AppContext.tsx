@@ -1,5 +1,5 @@
 import React, { useState, useCallback, createContext } from 'react';
-import { generateWebsite, generateNewsletter } from '@/features/generation/geminiService';
+import { useGeneration } from '@/hooks/useGeneration';
 import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '@/shared/constants';
 import { AppContextType } from '@/shared/types';
 import { AiProcessingMode, clearPrivacyPreference, loadPrivacyPreference, savePrivacyPreference } from '@/shared/privacy';
@@ -37,13 +37,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [lastPrompt, setLastPrompt] = useState('');
   const [retryCount, setRetryCount] = useState(0);
 
+  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
+    let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
+    if (params) {
+      for (const [paramKey, paramValue] of Object.entries(params)) {
+        message = message.replace(`{${paramKey}}`, String(paramValue));
+      }
+    }
+    return message;
+  }, [language]);
+
+  const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
+
   const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
     savePrivacyPreference(mode);
     setPrivacyModeState(mode);
     setError(null);
   }, []);
-
-  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
     if (params) {
       for (const [paramKey, paramValue] of Object.entries(params)) {
@@ -66,54 +76,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       selectedPalette,
     });
 
-    const validation = validateSchema(websiteFormSchema, formData, t);
-    if (validation.success === false) {
-      setError(validation.firstError);
-      return;
-    }
-
-    const validated = validation.data;
-    setLastPrompt(validated.prompt);
+    setLastPrompt(prompt);
     setPageState('loading');
     setError(null);
     setGeneratedUrl('');
     setNewsletter('');
 
-    const modPrompt = options?.modPrompt;
+    const result = await generateWebsiteContent(formData, options?.modPrompt, {
+      onRetry: (attempt, err) => {
+        setRetryCount(attempt);
+        setError(err.message);
+      },
+    });
 
-    try {
-      const paletteDetails =
-        COLOR_PALETTES.find((p) => p.name === validated.selectedPalette)?.description || '';
-      const code = await generateWebsite({
-        description: validated.prompt,
-        userName: validated.userName,
-        businessName: validated.businessName,
-        userEmail: validated.userEmail,
-        userPhone: validated.userPhone,
-        paletteName: validated.selectedPalette,
-        paletteDetails,
-        modificationPrompt: modPrompt,
-      });
-      if (code.trim().toLowerCase().startsWith('<!doctype html')) {
-        setGeneratedCode(code);
+    if (result.success) {
+      if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
+        setGeneratedCode(result.code);
         setPageState('result');
-        setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(code)}`);
+        setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
         setRetryCount(0);
       } else {
         setError(t('updateFailed'));
         setGeneratedCode(generatedCode || '');
         setPageState('result');
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setError(`Failed to generate website: ${errorMessage}`);
+    } else {
+      setError(`Failed to generate website: ${result.error}`);
       setGeneratedCode(generatedCode || '');
       setPageState('result');
       setRetryCount((prev) => prev + 1);
-    } finally {
-      if (modPrompt) setModificationPrompt('');
     }
-  }, [prompt, userName, businessName, userEmail, userPhone, selectedPalette, services, location, themeColor, generatedCode, t]);
+
+    if (options?.modPrompt) {
+      setModificationPrompt('');
+    }
+  }, [prompt, userName, businessName, userEmail, userPhone, selectedPalette, services, location, themeColor, generatedCode, t, generateWebsiteContent]);
 
   const handleGenerate = () => handleGenerateWrapper();
 
@@ -142,19 +139,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     setIsGeneratingPost(true);
     setError(null);
-    try {
-      const newsletterText = await generateNewsletter({
-        description: prompt,
-        businessName,
-      });
-      setNewsletter(newsletterText);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
-      setError(`Failed to generate newsletter: ${errorMessage}`);
-    } finally {
-      setIsGeneratingPost(false);
+    const result = await generateNewsletterContent({ prompt, businessName });
+    if (result.success) {
+      setNewsletter(result.newsletterText);
+    } else {
+      setError(`Failed to generate newsletter: ${result.error}`);
     }
-  }, [prompt, businessName, generatedUrl, t]);
+    setIsGeneratingPost(false);
+  }, [prompt, businessName, generatedUrl, t, generateNewsletterContent]);
 
   const handleSelectExample = (examplePrompt: string) => {
     setPrompt(examplePrompt);
@@ -168,6 +160,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     if (lastPrompt) {
       setPrompt(lastPrompt);
+      setRetryCount((prev) => prev + 1);
       await handleGenerateWrapper();
     } else {
       setError('No previous prompt to retry.');
