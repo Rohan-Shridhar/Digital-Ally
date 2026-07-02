@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
+import { enhanceHtmlImages } from '@/lib/lazy-loading';
 
-const CSP_META = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src https:;">`;
+const CSP_META = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: https: http:; font-src https:;">`;
 
 const PURIFY_CONFIG = {
   USE_PROFILES: { html: true },
@@ -46,5 +47,5 @@ export function sanitizePreviewHtml(raw: string): SanitizeResult {
     ? clean.replace(/(<head[^>]*>)/i, `$1${CSP_META}`)
     : CSP_META + clean;
 
-  return { html: withCsp, hadUnsafeContent };
+  return { html: enhanceHtmlImages(withCsp), hadUnsafeContent };
 }

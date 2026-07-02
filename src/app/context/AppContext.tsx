@@ -63,6 +63,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return message;
   }, [language]);
 
+  const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
+
+  const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
+    savePrivacyPreference(mode);
+    setPrivacyModeState(mode);
+    setError(null);
+  }, []);
+
   const handleGenerateWrapper = useCallback(async (options?: { modPrompt?: string }) => {
     const formData = sanitizeFormData({
       userName,
@@ -89,6 +97,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       },
     });
 
+    if ('error' in result) {
     if (result.success) {
       if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
         setGeneratedCode(result.code);
@@ -105,6 +114,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setGeneratedCode(generatedCode || '');
       setPageState('result');
       setRetryCount((prev) => prev + 1);
+    } else if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
+      setGeneratedCode(result.code);
+      setPageState('result');
+      setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
+      setRetryCount(0);
+    } else {
+      setError(t('updateFailed'));
+      setGeneratedCode(generatedCode || '');
+      setPageState('result');
     }
 
     if (options?.modPrompt) {
@@ -140,6 +158,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsGeneratingPost(true);
     setError(null);
     const result = await generateNewsletterContent({ prompt, businessName });
+    if ('error' in result) {
+      setError(`Failed to generate newsletter: ${result.error}`);
+    } else {
+      setNewsletter(result.newsletterText);
     if (result.success) {
       setNewsletter(result.newsletterText);
     } else {

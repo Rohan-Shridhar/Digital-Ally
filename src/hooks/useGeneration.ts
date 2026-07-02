@@ -22,6 +22,15 @@ interface WebsiteGenerationOptions {
   onRetry?: (attempt: number, error: Error) => void;
 }
 
+type ValidationResult<T> =
+  | { success: true; data: T }
+  | { success: false; errors: Record<string, string>; firstError: string };
+
+type ValidationFailure<T> = ValidationResult<T> & { success: false };
+
+const isValidationFailure = <T>(result: ValidationResult<T>): result is ValidationFailure<T> =>
+  result.success === false;
+
 export function useGeneration({ t }: UseGenerationProps) {
   const generateWebsiteContent = useCallback(
     async (
@@ -31,6 +40,7 @@ export function useGeneration({ t }: UseGenerationProps) {
     ): Promise<WebsiteGenerationResult> => {
       const sanitized = sanitizeFormData(formState);
       const validation = validateSchema(websiteFormSchema, sanitized, t);
+      if ('firstError' in validation) {
       if (!validation.success) {
         return { success: false, error: validation.firstError };
       }
@@ -74,6 +84,7 @@ export function useGeneration({ t }: UseGenerationProps) {
     async (formState: Record<string, string>): Promise<NewsletterGenerationResult> => {
       const sanitized = sanitizeFormData(formState);
       const validation = validateSchema(newsletterFormSchema, sanitized, t);
+      if ('firstError' in validation) {
       if (!validation.success) {
         return { success: false, error: validation.firstError };
       }

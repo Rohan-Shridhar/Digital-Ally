@@ -9,12 +9,14 @@ import {
   CheckIcon,
   CopyIcon,
   DownloadIcon,
-  ArrowPathIcon,
   EyeIcon,
   CodeIcon,
-  MicrophoneIcon,
 } from '@/components/IconSet';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { PreviewTabs } from '@/components/ui/PreviewTabs';
+import { ExportActions } from '@/components/ui/ExportActions';
+import { ModificationForm } from '@/components/ui/ModificationForm';
 
 export const OutputPanel: React.FC = () => {
   const context = useContext(AppContext);
@@ -102,14 +104,14 @@ export const OutputPanel: React.FC = () => {
     URL.revokeObjectURL(url);
   }, [generatedCode]);
 
-    const handleRegenerate = useCallback(() => {
-        const result = validateModification();
-        if (result.success === false) {
-            setError(result.firstError);
-            return;
-        }
-        handleAssist();
-    }, [validateModification, handleAssist, setError]);
+  const handleRegenerate = useCallback(() => {
+    const result = validateModification();
+    if (result.success === false) {
+      setError(result.firstError);
+      return;
+    }
+    handleAssist();
+  }, [validateModification, handleAssist, setError]);
 
   if (error && !generatedCode) {
     const { isRateLimit, message, retryMinutes } = parseRateLimitError(error);
@@ -169,56 +171,35 @@ export const OutputPanel: React.FC = () => {
     <div className="w-full h-full flex flex-col lg:flex-row">
       {/* Left Side - Preview */}
       <div className="flex-1 flex flex-col bg-gray-900 text-white">
-        <div className="flex-shrink-0 bg-gray-800 p-2 flex justify-between items-center gap-2 border-b border-gray-700">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setView('preview')}
-              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                view === 'preview'
-                  ? 'bg-lime-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
-            >
-              <EyeIcon className="w-5 h-5" /> {t('preview')}
-            </button>
-            <button
-              onClick={() => setView('code')}
-              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                view === 'code'
-                  ? 'bg-lime-600 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
-            >
-              <CodeIcon className="w-5 h-5" /> {t('code')}
-            </button>
-          </div>
-          {error && (
-            <p className="text-red-400 text-sm animate-pulse mx-auto">
-              {t('updateFailed')}: {error}
-            </p>
-          )}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white transition-colors text-sm"
-              aria-label="Copy Code"
-            >
-              {copied ? (
-                <CheckIcon className="w-5 h-5 text-green-400" />
-              ) : (
-                <CopyIcon className="w-5 h-5" />
-              )}
-              {copied ? t('copied') : t('copyCode')}
-            </button>
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white transition-colors text-sm"
-              aria-label="Download HTML"
-            >
-              <DownloadIcon className="w-5 h-5" /> {t('download')}
-            </button>
-          </div>
+        <div className="flex-shrink-0 bg-gray-800 p-2 flex flex-col gap-4 border-b border-gray-700 lg:flex-row lg:items-center lg:justify-between">
+        <PreviewTabs activeView={view} onChange={setView} />
+        {error && (
+          <p className="text-red-400 text-sm animate-pulse mx-auto lg:mx-0">
+            {t('updateFailed')}: {error}
+          </p>
+        )}
+        <div className="flex items-center gap-2 justify-center lg:justify-end">
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white transition-colors text-sm"
+            aria-label="Copy Code"
+          >
+            {copied ? (
+              <CheckIcon className="w-5 h-5 text-green-400" />
+            ) : (
+              <CopyIcon className="w-5 h-5" />
+            )}
+            {copied ? t('copied') : t('copyCode')}
+          </button>
+          <button
+            onClick={handleDownload}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-700 text-gray-300 hover:text-white transition-colors text-sm"
+            aria-label="Download HTML"
+          >
+            <DownloadIcon className="w-5 h-5" /> {t('download')}
+          </button>
         </div>
+      </div>
         {view === 'preview' ? (
           <>
             {hadUnsafeContent && (
@@ -244,91 +225,31 @@ export const OutputPanel: React.FC = () => {
 
       {/* Right Side - Controls */}
       <div className="w-full lg:w-1/3 xl:w-1/4 max-w-sm flex-shrink-0 bg-white p-6 overflow-y-auto border-r border-gray-200 h-full">
-        <h2 className="text-xl font-bold text-gray-800 mb-1">Modify & Export</h2>
-        <p className="text-sm text-gray-500 mb-6">Make changes or download your website</p>
-
-        {/* Modification Section */}
-        <div className="mb-6">
-          <h3 className="font-bold text-gray-800 mb-2">AI Assistant</h3>
-          <p className="text-xs text-gray-500 mb-2">Describe changes you want to make</p>
-          <div className="relative">
-            <ValidatedField
-              error={modErrors.modificationPrompt}
-              isValid={isModFieldValid('modificationPrompt')}
-              showSuccess
-            >
-              {(fieldProps) => (
-                <textarea
-                  {...fieldProps}
-                  value={modificationPrompt}
-                  onChange={(e) => {
-                    setModificationPrompt(e.target.value);
-                    markModTouched('modificationPrompt');
-                  }}
-                  onBlur={() => markModTouched('modificationPrompt')}
-                  placeholder="e.g., Make the headline bolder, change colors, add a contact form"
-                  className={`${fieldProps.className} mt-1 px-3 py-2 bg-gray-50 h-24 resize-y pr-10`}
-                />
-              )}
-            </ValidatedField>
-            <button
-              onClick={toggleListening}
-              className={`absolute top-2 right-2 p-1.5 rounded-full ${
-                isListening
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-              }`}
-              aria-label={isListening ? 'Stop Listening' : 'Start Listening'}
-            >
-              <MicrophoneIcon className="w-4 h-4" />
-            </button>
-          </div>
-
-                    <button 
-                        onClick={handleRegenerate} 
-                        disabled={!isModificationValid} 
-                        className="mt-4 w-full bg-green-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-green-600 transition disabled:bg-gray-400"
-                    >
-            Apply Changes
-          </button>
+        <SectionCard title="Modify & Export" subtitle="Make changes or download your website" className="mb-6">
+          <ModificationForm
+            value={modificationPrompt}
+            onChange={setModificationPrompt}
+            onSubmit={handleRegenerate}
+            onToggleListening={toggleListening}
+            isListening={isListening}
+            isValid={isModificationValid}
+            error={modErrors.modificationPrompt}
+            t={t}
+          />
           {speechError && <p className="text-red-500 mt-2 text-xs">{speechError}</p>}
-        </div>
 
-        {/* Export Actions */}
-        <div className="mb-6">
-          <h3 className="font-bold text-gray-800 mb-2">Export Options</h3>
-          <div className="space-y-2">
-            <a
-              href={generatedUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition text-sm"
-            >
-              <EyeIcon className="w-4 h-4" /> Open in New Tab
-            </a>
-            <button
-              onClick={handleDownload}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm"
-            >
-              <DownloadIcon className="w-4 h-4" /> Download HTML
-            </button>
-            <button
-              onClick={handleCopy}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-50 transition text-sm"
-            >
-              {copied ? (
-                <CheckIcon className="w-4 h-4 text-green-500" />
-              ) : (
-                <CopyIcon className="w-4 h-4" />
-              )}
-              {copied ? t('copied') : t('copyCode')}
-            </button>
+          <div className="mt-6">
+            <ExportActions
+              generatedUrl={generatedUrl}
+              onCopy={handleCopy}
+              onDownload={handleDownload}
+              copied={copied}
+              copyLabel={copied ? t('copied') : t('copyCode')}
+            />
           </div>
-        </div>
+        </SectionCard>
 
-        {/* Newsletter Generation */}
-        <div className="mb-6">
-          <h3 className="font-bold text-gray-800 mb-2">Marketing</h3>
+        <SectionCard title="Marketing" subtitle="Generate a newsletter based on your website" className="mb-6">
           <button
             onClick={handleGenerateNewsletter}
             disabled={isGeneratingPost}
@@ -346,9 +267,8 @@ export const OutputPanel: React.FC = () => {
               />
             </div>
           )}
-        </div>
+        </SectionCard>
 
-        {/* Reset */}
         <button
           onClick={reset}
           className="w-full text-center text-sm text-gray-500 hover:text-lime-600 font-medium"

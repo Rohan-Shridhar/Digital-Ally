@@ -422,7 +422,8 @@ The user provides their personal and business details, a business description (i
 
 5.  **Structure & Images:**
     *   The entire website must be a single HTML file.
-    *   You **MUST NOT** use \`<img>\` tags or CSS \`background-image\`. The design must be excellent using only typography, layout, and the chosen color scheme.
+    *   If you include images, use \`<img>\` tags with \`loading="lazy"\`, \`decoding="async"\`, and descriptive \`alt\` text. Prefer CSS layout and typography when images are not essential.
+    *   Do not use CSS \`background-image\` for content images.
     *   Include a simple header with the business name and a simple footer with the contact information and a copyright notice (e.g., © 2024 {BUSINESS_NAME}).
 
 6.  **Final Output Format:**

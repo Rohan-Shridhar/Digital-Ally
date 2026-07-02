@@ -1,11 +1,12 @@
-import React, { useState, useContext, useCallback } from 'react';
+import React, { useState, useContext, useCallback, useEffect } from 'react';
 import { AppContext } from '@/app/context/AppContext';
 import { useSpeechToText } from '@/hooks/useSpeechToText';
 import { useFormValidation } from '@/hooks/useFormValidation';
 import { websiteFormSchema } from '@/shared/validation';
-import { COLOR_PALETTES } from '@/shared/constants';
 import { ValidatedField } from '@/components/ValidatedField';
 import { CheckIcon, MicrophoneIcon, SparklesIcon } from '@/components/IconSet';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { PaletteSelector } from '@/components/PaletteSelector';
 
 export const InputPanel: React.FC = () => {
     const context = useContext(AppContext);
@@ -47,19 +48,26 @@ export const InputPanel: React.FC = () => {
     } = useFormValidation({ schema: websiteFormSchema, values: formValues, t });
 
     const { isListening, error: speechError, toggleListening } = useSpeechToText({ onTranscript: setPrompt, lang: language });
-    const [unlockedSections, setUnlockedSections] = useState({ 
-        details: false, 
-        description: false, 
-        services: false, 
-        style: false 
+    const [unlockedSections, setUnlockedSections] = useState({
+        details: false,
+        description: false,
+        services: false,
+        style: false,
     });
 
-    const detailsComplete = !errors.userName && !errors.businessName && !errors.userEmail && !errors.userPhone
-        && userName.trim() !== '' && businessName.trim() !== '' && userEmail.trim() !== '' && userPhone.trim() !== '';
+    const detailsComplete =
+        !errors.userName &&
+        !errors.businessName &&
+        !errors.userEmail &&
+        !errors.userPhone &&
+        userName.trim() !== '' &&
+        businessName.trim() !== '' &&
+        userEmail.trim() !== '' &&
+        userPhone.trim() !== '';
     const descriptionComplete = !errors.prompt && prompt.trim() !== '';
     const servicesComplete = !errors.services && services.trim() !== '';
-    
-    React.useEffect(() => {
+
+    useEffect(() => {
         setUnlockedSections({
             details: detailsComplete,
             description: detailsComplete,
@@ -84,13 +92,11 @@ export const InputPanel: React.FC = () => {
             </div>
 
             <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg p-6 md:p-8 border border-gray-200">
-                {/* Step 1: Business Details */}
-                <div className="mb-8">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-1 flex items-center gap-3">
-                        {t('formStep1Title')}
-                        {detailsComplete && <CheckIcon className="w-6 h-6 text-green-500"/>}
-                    </h3>
-                    <p className="text-gray-500 mb-6">{t('step1Subtitle')}</p>
+                <SectionCard
+                    title={t('formStep1Title')}
+                    subtitle={t('step1Subtitle')}
+                    completed={detailsComplete}
+                >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <ValidatedField
                             label={t('yourNamePlaceholder')}
@@ -175,16 +181,14 @@ export const InputPanel: React.FC = () => {
                             )}
                         </ValidatedField>
                     </div>
-                </div>
+                </SectionCard>
 
-                {/* Step 2: Business Description */}
                 {unlockedSections.description && (
-                    <div className="mb-8 animate-fade-in-up-short">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-1 flex items-center gap-3">
-                            {t('step2Title')}
-                            {descriptionComplete && <CheckIcon className="w-6 h-6 text-green-500"/>}
-                        </h3>
-                        <p className="text-gray-500 mb-6">{t('step2Subtitle')}</p>
+                    <SectionCard
+                        title={t('step2Title')}
+                        subtitle={t('step2Subtitle')}
+                        completed={descriptionComplete}
+                    >
                         <ValidatedField
                             error={errors.prompt}
                             isValid={isFieldValid('prompt')}
@@ -219,17 +223,16 @@ export const InputPanel: React.FC = () => {
                             )}
                         </ValidatedField>
                         {speechError && <p className="text-red-500 mt-2">{speechError}</p>}
-                    </div>
+                    </SectionCard>
                 )}
 
                 {/* Step 3: Services */}
                 {unlockedSections.services && (
-                    <div className="mb-8 animate-fade-in-up-short">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-1 flex items-center gap-3">
-                            Services & Products
-                            {servicesComplete && <CheckIcon className="w-6 h-6 text-green-500"/>}
-                        </h3>
-                        <p className="text-gray-500 mb-6">Describe what your business offers</p>
+                    <SectionCard
+                        title="Services & Products"
+                        subtitle="Describe what your business offers"
+                        completed={servicesComplete}
+                    >
                         <ValidatedField
                             error={errors.services}
                             isValid={isFieldValid('services')}
@@ -249,15 +252,15 @@ export const InputPanel: React.FC = () => {
                                 />
                             )}
                         </ValidatedField>
-                    </div>
+                    </SectionCard>
                 )}
 
-                {/* Step 4: Location & Theme */}
                 {unlockedSections.style && (
-                    <div className="animate-fade-in-up-short">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-1">Location & Style</h3>
-                        <p className="text-gray-500 mb-6">Set your location and choose a style</p>
-                        
+                    <SectionCard
+                        title="Location & Style"
+                        subtitle="Set your location and choose a style"
+                        completed={Boolean(location.trim() && themeColor && selectedPalette)}
+                    >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <ValidatedField
                                 label="Business Location"
@@ -279,7 +282,7 @@ export const InputPanel: React.FC = () => {
                                     />
                                 )}
                             </ValidatedField>
-                            
+
                             <ValidatedField
                                 label="Theme Color"
                                 error={errors.themeColor}
@@ -318,50 +321,30 @@ export const InputPanel: React.FC = () => {
 
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-3">Color Palette</label>
-                            {errors.selectedPalette && (
-                                <p className="text-red-600 text-sm mb-2" role="alert" aria-live="polite">
-                                    {errors.selectedPalette}
-                                </p>
-                            )}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4" role="radiogroup" aria-label="Color Palette">
-                                {COLOR_PALETTES.map(p => (
-                                    <button 
-                                        key={p.name}
-                                        type="button"
-                                        role="radio"
-                                        aria-checked={selectedPalette === p.name}
-                                        onClick={() => {
-                                            setSelectedPalette(p.name);
-                                            markTouched('selectedPalette');
-                                        }} 
-                                        className={`p-4 rounded-lg border-4 transition ${
-                                            selectedPalette === p.name ? 'border-lime-500 scale-105' : 'border-gray-200 hover:border-lime-300'
-                                        }`}
-                                    >
-                                        <div className="flex -space-x-2 justify-center mb-2">
-                                            {Object.values(p.palette).map((color, i) => (
-                                                <div key={i} className={`w-8 h-8 rounded-full border-2 border-white ${color}`}></div>
-                                            ))}
-                                        </div>
-                                        <h3 className="font-bold text-gray-800">{t(p.name)}</h3>
-                                    </button>
-                                ))}
-                            </div>
+                            <PaletteSelector
+                                selectedPalette={selectedPalette}
+                                onSelectPalette={(palette) => {
+                                    setSelectedPalette(palette);
+                                    markTouched('selectedPalette');
+                                }}
+                                error={errors.selectedPalette}
+                                getLabel={t}
+                            />
                         </div>
-                        
+
                         {error && <p className="text-red-500 mt-6 text-center font-medium" role="alert">{error}</p>}
 
                         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-                            <button 
+                            <button
                                 type="button"
-                                onClick={onSubmit} 
-                                disabled={!canGenerate} 
+                                onClick={onSubmit}
+                                disabled={!canGenerate}
                                 className="bg-lime-500 text-white font-bold py-4 px-16 text-lg rounded-lg hover:bg-lime-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-3 mx-auto"
                             >
                                 <SparklesIcon className="w-6 h-6" /> {t('generateButton')}
                             </button>
                         </div>
-                    </div>
+                    </SectionCard>
                 )}
             </div>
         </div>

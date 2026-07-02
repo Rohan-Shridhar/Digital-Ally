@@ -13,6 +13,7 @@ Digital Ally (formerly BizBoost) is an advanced AI-powered platform designed to 
 - **Customization**: Choose from curated color palettes and modify generated designs with follow-up prompts.
 - **Multi-Language Support**: Interactive interface supporting multiple languages.
 - **Live Preview & Code Export**: View changes in real-time and export clean, deployment-ready HTML/CSS code.
+- **Lazy Image Loading**: Images load on demand via Intersection Observer with placeholders and fallbacks for faster page loads.
 - **Privacy Controls**: Versioned consent before remote AI processing, local-only generation, and one-click data deletion.
 - **Backend AI Gateway**: All remote AI requests route through a secured Express API with server-managed secrets, quotas, and audit logging.
 
@@ -115,6 +116,18 @@ http://localhost:5174
 | npm run lint:architecture | Alias for the structure and naming check |
 | npm run preview | Preview production build locally |
 | npm run start:server | Start Express AI proxy server |
+| npm test | Run unit tests (including lazy-loading) |
+| npm run test:watch | Run tests in watch mode |
+
+## 🖼️ Lazy Image Loading
+
+Digital Ally defers image downloads until they are near the viewport to improve initial page load performance.
+
+- **`LazyImage` component** (`src/components/LazyImage.tsx`): Wraps `react-lazy-load-image-component` with blur placeholders, `loading="lazy"`, and automatic fallback to `/images/fallback.svg` on error.
+- **HTML preview enhancement** (`src/lib/lazy-loading/`): Generated website previews automatically receive `loading="lazy"`, `decoding="async"`, and skeleton styles.
+- **Assets**: Placeholder and fallback SVGs live in `public/images/`.
+
+See [docs/LAZY_LOADING.md](docs/LAZY_LOADING.md) for usage examples and implementation details.
 
 ## 🛡️ Privacy
 
