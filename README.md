@@ -14,6 +14,7 @@ Digital Ally (formerly BizBoost) is an advanced AI-powered platform designed to 
 - **Multi-Language Support**: Interactive interface supporting multiple languages.
 - **Live Preview & Code Export**: View changes in real-time and export clean, deployment-ready HTML/CSS code.
 - **Privacy Controls**: Versioned consent before remote AI processing, local-only generation, and one-click data deletion.
+- **Backend AI Gateway**: All remote AI requests route through a secured Express API with server-managed secrets, quotas, and audit logging.
 
 ## 🛠️ Tech Stack
 
@@ -41,29 +42,39 @@ npm install
 
 ### Configure Environment Variables
 
-Copy the example file:
+**Client** (`.env` in project root):
 
 ```bash
 cp .env.example .env
 ```
 
-Update the values:
+```env
+# Gateway token — same value as SERVER_CLIENT_TOKEN in server/.env (NOT the Gemini key)
+VITE_SERVER_CLIENT_TOKEN=replace_with_secure_random_token
+```
+
+**Server** (`server/.env` — holds all secrets):
+
+```bash
+cp server/.env.example server/.env
+```
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-2.5-flash
 SERVER_CLIENT_TOKEN=replace_with_secure_random_token
+GEMINI_MODEL=gemini-2.5-flash
 AI_CONSENT_VERSION=2026-06-21
+ADMIN_TOKEN=replace_with_admin_token
 
 # Optional Redis Configuration
 REDIS_HOST=localhost
 REDIS_PORT=6379
-
-# Optional Server Configuration
 PORT=5174
 DAILY_QUOTA=100
 MONTHLY_QUOTA=1000
 ```
+
+> **Important:** The Gemini API key lives only in `server/.env`. The browser uses `VITE_SERVER_CLIENT_TOKEN` to authenticate with the backend gateway — never embed API keys in the frontend.
 
 ---
 
