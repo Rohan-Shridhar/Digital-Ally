@@ -7,13 +7,14 @@ const rootDirectory = process.cwd();
 const sourceDirectory = path.join(rootDirectory, 'src');
 const constantsPath = path.join(sourceDirectory, 'shared', 'constants.ts');
 
-const parseFile = (filePath) => ts.createSourceFile(
-  filePath,
-  fs.readFileSync(filePath, 'utf8'),
-  ts.ScriptTarget.Latest,
-  true,
-  filePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-);
+const parseFile = (filePath) =>
+  ts.createSourceFile(
+    filePath,
+    fs.readFileSync(filePath, 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+    filePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+  );
 
 const getPropertyName = (property) => {
   if (!property.name) return null;
@@ -30,25 +31,26 @@ const dynamicTranslationKeys = new Set();
 
 const visitConstants = (node) => {
   if (
-    ts.isVariableDeclaration(node)
-    && ts.isIdentifier(node.name)
-    && node.initializer
-    && ts.isArrayLiteralExpression(node.initializer)
+    ts.isVariableDeclaration(node) &&
+    ts.isIdentifier(node.name) &&
+    node.initializer &&
+    ts.isArrayLiteralExpression(node.initializer)
   ) {
-    const target = node.name.text === 'LANGUAGES'
-      ? { propertyName: 'value', values: configuredLocales }
-      : node.name.text === 'COLOR_PALETTES'
-        ? { propertyName: 'name', values: dynamicTranslationKeys }
-        : null;
+    const target =
+      node.name.text === 'LANGUAGES'
+        ? { propertyName: 'value', values: configuredLocales }
+        : node.name.text === 'COLOR_PALETTES'
+          ? { propertyName: 'name', values: dynamicTranslationKeys }
+          : null;
 
     if (target) {
       for (const element of node.initializer.elements) {
         if (!ts.isObjectLiteralExpression(element)) continue;
         for (const property of element.properties) {
           if (
-            ts.isPropertyAssignment(property)
-            && getPropertyName(property) === target.propertyName
-            && ts.isStringLiteral(property.initializer)
+            ts.isPropertyAssignment(property) &&
+            getPropertyName(property) === target.propertyName &&
+            ts.isStringLiteral(property.initializer)
           ) {
             target.values.add(property.initializer.text);
           }
@@ -58,11 +60,11 @@ const visitConstants = (node) => {
   }
 
   if (
-    ts.isVariableDeclaration(node)
-    && ts.isIdentifier(node.name)
-    && node.name.text === 'TRANSLATIONS'
-    && node.initializer
-    && ts.isObjectLiteralExpression(node.initializer)
+    ts.isVariableDeclaration(node) &&
+    ts.isIdentifier(node.name) &&
+    node.name.text === 'TRANSLATIONS' &&
+    node.initializer &&
+    ts.isObjectLiteralExpression(node.initializer)
   ) {
     for (const localeProperty of node.initializer.properties) {
       if (!ts.isPropertyAssignment(localeProperty)) continue;
@@ -108,11 +110,11 @@ for (const filePath of sourceFiles) {
   const source = parseFile(filePath);
   const visitCalls = (node) => {
     if (
-      ts.isCallExpression(node)
-      && ts.isIdentifier(node.expression)
-      && node.expression.text === 't'
-      && node.arguments.length > 0
-      && ts.isStringLiteral(node.arguments[0])
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 't' &&
+      node.arguments.length > 0 &&
+      ts.isStringLiteral(node.arguments[0])
     ) {
       usedKeys.add(node.arguments[0].text);
     }
@@ -122,9 +124,7 @@ for (const filePath of sourceFiles) {
 }
 for (const key of dynamicTranslationKeys) usedKeys.add(key);
 
-const allDefinedKeys = new Set(
-  [...translations.values()].flatMap((keys) => [...keys]),
-);
+const allDefinedKeys = new Set([...translations.values()].flatMap((keys) => [...keys]));
 const failures = [];
 
 for (const locale of configuredLocales) {
@@ -151,6 +151,6 @@ if (failures.length > 0) {
 }
 
 console.log(
-  `Translation coverage passed: ${translations.size} locales, `
-  + `${allDefinedKeys.size} consistent keys, ${usedKeys.size} static UI keys checked.`,
+  `Translation coverage passed: ${translations.size} locales, ` +
+    `${allDefinedKeys.size} consistent keys, ${usedKeys.size} static UI keys checked.`
 );

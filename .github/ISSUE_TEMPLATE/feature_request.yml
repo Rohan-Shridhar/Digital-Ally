@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest an improvement or new feature.
-title: "[Feature]: "
+title: '[Feature]: '
 labels: [ELUSOC, enhancement]
 body:
   - type: markdown
@@ -12,7 +12,7 @@ body:
     attributes:
       label: Problem statement
       description: What problem are you trying to solve?
-      placeholder: "As a user, I want ... so that ..."
+      placeholder: 'As a user, I want ... so that ...'
     validations:
       required: true
   - type: textarea

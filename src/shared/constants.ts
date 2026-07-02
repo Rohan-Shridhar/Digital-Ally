@@ -1,16 +1,55 @@
 export const LANGUAGES = [
-    { label: 'English', value: 'en-US' },
-    { label: 'తెలుగు', value: 'te-IN' },
-    { label: 'हिन्दी', value: 'hi-IN' },
+  { label: 'English', value: 'en-US' },
+  { label: 'తెలుగు', value: 'te-IN' },
+  { label: 'हिन्दी', value: 'hi-IN' },
 ];
 
 export const COLOR_PALETTES = [
-    { name: 'Modern', palette: { bg: 'bg-white', primary: 'bg-indigo-600', text: 'text-gray-800', subtle: 'bg-gray-50' }, description: "Primary: Indigo for trust and modernity. Use for buttons, links, and key highlights. Backgrounds: White and light gray for a clean, spacious feel. Text: Dark gray for readability." },
-    { name: 'Vibrant', palette: { bg: 'bg-white', primary: 'bg-orange-500', text: 'text-gray-900', subtle: 'bg-yellow-50' }, description: "Primary: Bright orange for energy and creativity. Use for calls-to-action. Backgrounds: Soft yellow and white for a warm, inviting atmosphere. Text: Nearly black for strong contrast." },
-    { name: 'Corporate', palette: { bg: 'bg-white', primary: 'bg-blue-800', text: 'text-gray-700', subtle: 'bg-slate-100' }, description: "Primary: Deep blue for professionalism and stability. Use for headers and buttons. Backgrounds: Cool-toned slate and white for a serious, clean look. Text: Muted gray for a formal tone." },
-    { name: 'Elegant', palette: { bg: 'bg-gray-900', primary: 'bg-amber-400', text: 'text-white', subtle: 'bg-gray-800' }, description: "Primary: Gold/amber for a touch of luxury. Use for highlights and buttons. Backgrounds: Dark charcoal and black for a sophisticated, premium feel. Text: White for crisp readability on dark backgrounds." },
+  {
+    name: 'Modern',
+    palette: {
+      bg: 'bg-white',
+      primary: 'bg-indigo-600',
+      text: 'text-gray-800',
+      subtle: 'bg-gray-50',
+    },
+    description:
+      'Primary: Indigo for trust and modernity. Use for buttons, links, and key highlights. Backgrounds: White and light gray for a clean, spacious feel. Text: Dark gray for readability.',
+  },
+  {
+    name: 'Vibrant',
+    palette: {
+      bg: 'bg-white',
+      primary: 'bg-orange-500',
+      text: 'text-gray-900',
+      subtle: 'bg-yellow-50',
+    },
+    description:
+      'Primary: Bright orange for energy and creativity. Use for calls-to-action. Backgrounds: Soft yellow and white for a warm, inviting atmosphere. Text: Nearly black for strong contrast.',
+  },
+  {
+    name: 'Corporate',
+    palette: {
+      bg: 'bg-white',
+      primary: 'bg-blue-800',
+      text: 'text-gray-700',
+      subtle: 'bg-slate-100',
+    },
+    description:
+      'Primary: Deep blue for professionalism and stability. Use for headers and buttons. Backgrounds: Cool-toned slate and white for a serious, clean look. Text: Muted gray for a formal tone.',
+  },
+  {
+    name: 'Elegant',
+    palette: {
+      bg: 'bg-gray-900',
+      primary: 'bg-amber-400',
+      text: 'text-white',
+      subtle: 'bg-gray-800',
+    },
+    description:
+      'Primary: Gold/amber for a touch of luxury. Use for highlights and buttons. Backgrounds: Dark charcoal and black for a sophisticated, premium feel. Text: White for crisp readability on dark backgrounds.',
+  },
 ];
-
 
 export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
   'en-US': {
@@ -26,7 +65,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     subheadline: 'Describe your business and let AI do the rest. No coding required.',
     speakButtonText: 'Click to speak about your business',
     generateButton: 'Generate Website',
-    placeholder: 'e.g., "We sell organic coffee and pastries. I want a modern and minimalist design."',
+    placeholder:
+      'e.g., "We sell organic coffee and pastries. I want a modern and minimalist design."',
     placeholderAssistant: 'e.g., "Make the headline bolder"',
     yourNamePlaceholder: 'Your Name',
     businessNamePlaceholder: 'Your Business Name',
@@ -46,6 +86,18 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     updateFailed: 'The AI returned an invalid response. Your last working version is shown.',
     errorAssistant: 'Please provide instructions for the assistant.',
     errorFormNotComplete: 'Please fill out all fields and select a style.',
+    validationRequired: 'This field is required.',
+    validationEmail: 'Please enter a valid email address.',
+    validationPhone: 'Please enter a valid phone number (7–20 digits).',
+    validationUrl: 'Please enter a valid URL starting with http:// or https://.',
+    validationPassword: 'Password must be at least 8 characters with uppercase, lowercase, and a number.',
+    validationMinLength: 'Must be at least {min} characters.',
+    validationMaxLength: 'Must be no more than {max} characters.',
+    validationMinValue: 'Must be at least {min}.',
+    validationMaxValue: 'Must be no more than {max}.',
+    validationHexColor: 'Please enter a valid hex color (e.g., #10b981).',
+    validationPalette: 'Please select a color palette.',
+    validationPasswordMismatch: 'Passwords do not match.',
     formStep1Title: '1. Your Details',
     step1Subtitle: 'These details will be shown on your new website.',
     step2Title: '2. Business Description',
@@ -93,7 +145,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     dashboardPrompt: 'Generate your website first to see your business data here.',
     goToGenerator: 'Go to Generator',
     aiAnalysis: 'AI Analysis',
-    aiAnalysisSubtext: 'Let AI analyze your dashboard and give you a spoken summary in your chosen language.',
+    aiAnalysisSubtext:
+      'Let AI analyze your dashboard and give you a spoken summary in your chosen language.',
     analyzeAndSpeak: 'Analyze & Speak',
     analyzing: 'Analyzing...',
     stopSpeaking: 'Stop Speaking',
@@ -113,7 +166,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     subheadline: 'మీ వ్యాపారాన్ని వివరించండి మరియు మిగిలినది AI చూసుకుంటుంది. కోడింగ్ అవసరం లేదు.',
     speakButtonText: 'మీ వ్యాపారం గురించి మాట్లాడటానికి క్లిక్ చేయండి',
     generateButton: 'వెబ్‌సైట్ రూపొందించండి',
-    placeholder: 'ఉదా., "మేము సేంద్రీయ కాఫీ మరియు పేస్ట్రీలను విక్రయిస్తాము. నాకు ఆధునిక డిజైన్ కావాలి."',
+    placeholder:
+      'ఉదా., "మేము సేంద్రీయ కాఫీ మరియు పేస్ట్రీలను విక్రయిస్తాము. నాకు ఆధునిక డిజైన్ కావాలి."',
     placeholderAssistant: 'ఉదా., "హెడ్‌లైన్‌ను మరింత పెద్దదిగా చేయండి"',
     yourNamePlaceholder: 'మీ పేరు',
     businessNamePlaceholder: 'మీ వ్యాపారం పేరు',
@@ -133,10 +187,23 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     updateFailed: 'AI చెల్లని ప్రతిస్పందనను అందించింది. మీ చివరి పని చేసే సంస్కరణ చూపబడింది.',
     errorAssistant: 'దయచేసి సహాయం చేయడానికి సూచనలను అందించండి.',
     errorFormNotComplete: 'దయచేసి అన్ని ఫీల్డ్‌లను పూరించండి మరియు శైలిని ఎంచుకోండి.',
+    validationRequired: 'ఈ ఫీల్డ్ అవసరం.',
+    validationEmail: 'దయచేసి చెల్లుబాటు అయ్యే ఇమెయిల్ చిరునామా నమోదు చేయండి.',
+    validationPhone: 'దయచేసి చెల్లుబాటు అయ్యే ఫోన్ నంబర్ నమోదు చేయండి (7–20 అంకెలు).',
+    validationUrl: 'దయచేసి http:// లేదా https:// తో ప్రారంభమయ్యే చెల్లుబాటు అయ్యే URL నమోదు చేయండి.',
+    validationPassword: 'పాస్‌వర్డ్ కనీసం 8 అక్షరాలు, పెద్ద అక్షరం, చిన్న అక్షరం మరియు సంఖ్య ఉండాలి.',
+    validationMinLength: 'కనీసం {min} అక్షరాలు ఉండాలి.',
+    validationMaxLength: 'గరిష్టంగా {max} అక్షరాలు మాత్రమే.',
+    validationMinValue: 'కనీసం {min} ఉండాలి.',
+    validationMaxValue: 'గరిష్టంగా {max} మాత్రమే.',
+    validationHexColor: 'దయచేసి చెల్లుబాటు అయ్యే హెక్స్ రంగు నమోదు చేయండి (ఉదా., #10b981).',
+    validationPalette: 'దయచేసి రంగు ప్యాలెట్‌ను ఎంచుకోండి.',
+    validationPasswordMismatch: 'పాస్‌వర్డ్‌లు సరిపోలడం లేదు.',
     formStep1Title: '1. మీ వివరాలు',
     step1Subtitle: 'ఈ వివరాలు మీ కొత్త వెబ్‌సైట్‌లో చూపబడతాయి.',
     step2Title: '2. వ్యాపార వివరణ',
-    step2Subtitle: 'మీ వాయిస్‌ని ఉపయోగించండి లేదా ఏ భాషలోనైనా టైప్ చేయండి. మీకు వీలైనంత వివరంగా చెప్పండి!',
+    step2Subtitle:
+      'మీ వాయిస్‌ని ఉపయోగించండి లేదా ఏ భాషలోనైనా టైప్ చేయండి. మీకు వీలైనంత వివరంగా చెప్పండి!',
     step3Title: '3. శైలి',
     step3Subtitle: 'మీ బ్రాండ్‌కు సరిపోయే రంగుల పాలెట్‌ను ఎంచుకోండి.',
     listening: 'వినడం...',
@@ -149,7 +216,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     customizeAndRegenerate: 'అనుకూలీకరించండి & పునరుత్పత్తి చేయండి',
     regenerateButton: 'వెబ్‌సైట్‌ను పునరుత్పత్తి చేయండి',
     aiAssistant: 'AI సహాయకుడు',
-    aiAssistantHint: 'నిర్దిష్ట మార్పుల కోసం అడగండి, ఉదా., "సంప్రదింపు విభాగాన్ని మరింత ప్రముఖంగా చేయండి."',
+    aiAssistantHint:
+      'నిర్దిష్ట మార్పుల కోసం అడగండి, ఉదా., "సంప్రదింపు విభాగాన్ని మరింత ప్రముఖంగా చేయండి."',
     updateWithAssistant: 'సహాయకుడితో నవీకరించండి',
     yourChanges: 'మార్పులు చేసి పునరుత్పత్తి చేయండి',
     promoteYourSite: 'మీ సైట్‌ను ప్రచారం చేయండి',
@@ -160,7 +228,7 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     shareOnWhatsApp: 'WhatsAppలో భాగస్వామ్యం చేయండి',
     pasteInWhatsApp: 'కాపీ చేయబడింది! ఇప్పుడు మీ చాట్‌లో అతికించండి.',
     businessProfile: 'వ్యాపార ప్రొఫైల్',
-    todaysVisitors: "నేటి సందర్శకులు",
+    todaysVisitors: 'నేటి సందర్శకులు',
     campaignLaunches: 'ప్రచార ప్రారంభాలు',
     mostViewedPages: 'అత్యధికంగా వీక్షించిన పేజీలు',
     latestReviews: 'తాజా సమీక్షలు',
@@ -180,7 +248,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     dashboardPrompt: 'మీ వ్యాపార డేటాను ఇక్కడ చూడటానికి ముందుగా మీ వెబ్‌సైట్‌ను రూపొందించండి.',
     goToGenerator: 'జెనరేటర్‌కు వెళ్లండి',
     aiAnalysis: 'AI విశ్లేషణ',
-    aiAnalysisSubtext: 'AI మీ డాష్‌బోర్డ్‌ను విశ్లేషించి, మీరు ఎంచుకున్న భాషలో మాట్లాడే సారాంశాన్ని అందించనివ్వండి.',
+    aiAnalysisSubtext:
+      'AI మీ డాష్‌బోర్డ్‌ను విశ్లేషించి, మీరు ఎంచుకున్న భాషలో మాట్లాడే సారాంశాన్ని అందించనివ్వండి.',
     analyzeAndSpeak: 'విశ్లేషించి మాట్లాడండి',
     analyzing: 'విశ్లేషిస్తోంది...',
     stopSpeaking: 'మాట్లాడటం ఆపండి',
@@ -197,7 +266,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     dashboard: 'डैशबोर्ड',
     examples: 'उदाहरण',
     headline1: 'मिनटों में अपनी वेबसाइट बनाएं।',
-    subheadline: 'अपने व्यवसाय का वर्णन करें और बाकी काम AI को करने दें। किसी कोडिंग की आवश्यकता नहीं है।',
+    subheadline:
+      'अपने व्यवसाय का वर्णन करें और बाकी काम AI को करने दें। किसी कोडिंग की आवश्यकता नहीं है।',
     speakButtonText: 'अपने व्यवसाय के बारे में बोलने के लिए क्लिक करें',
     generateButton: 'वेबसाइट बनाएं',
     placeholder: 'जैसे, "हम ऑर्गेनिक कॉफी और पेस्ट्री बेचते हैं। मुझे एक आधुनिक डिजाइन चाहिए।"',
@@ -220,10 +290,23 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     updateFailed: 'AI ने एक अमान्य प्रतिक्रिया दी। आपका अंतिम कार्यशील संस्करण दिखाया गया है।',
     errorAssistant: 'कृपया सहायक के लिए निर्देश प्रदान करें।',
     errorFormNotComplete: 'कृपया सभी फ़ील्ड भरें और एक शैली चुनें।',
+    validationRequired: 'यह फ़ील्ड आवश्यक है।',
+    validationEmail: 'कृपया एक मान्य ईमेल पता दर्ज करें।',
+    validationPhone: 'कृपया एक मान्य फ़ोन नंबर दर्ज करें (7–20 अंक)।',
+    validationUrl: 'कृपया http:// या https:// से शुरू होने वाला मान्य URL दर्ज करें।',
+    validationPassword: 'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए, जिसमें बड़े अक्षर, छोटे अक्षर और एक संख्या शामिल हो।',
+    validationMinLength: 'कम से कम {min} अक्षर होने चाहिए।',
+    validationMaxLength: 'अधिकतम {max} अक्षर होने चाहिए।',
+    validationMinValue: 'कम से कम {min} होना चाहिए।',
+    validationMaxValue: 'अधिकतम {max} होना चाहिए।',
+    validationHexColor: 'कृपया एक मान्य हेक्स रंग दर्ज करें (जैसे, #10b981)।',
+    validationPalette: 'कृपया एक रंग पैलेट चुनें।',
+    validationPasswordMismatch: 'पासवर्ड मेल नहीं खाते।',
     formStep1Title: '1. आपका विवरण',
     step1Subtitle: 'ये विवरण आपकी नई वेबसाइट पर दिखाए जाएंगे।',
     step2Title: '2. व्यवसाय विवरण',
-    step2Subtitle: 'अपनी आवाज़ का उपयोग करें या किसी भी भाषा में टाइप करें। जितना हो सके उतना वर्णनात्मक बनें!',
+    step2Subtitle:
+      'अपनी आवाज़ का उपयोग करें या किसी भी भाषा में टाइप करें। जितना हो सके उतना वर्णनात्मक बनें!',
     step3Title: '3. शैली',
     step3Subtitle: 'एक रंग पैलेट चुनें जो आपके ब्रांड के अनुकूल हो।',
     listening: 'सुन रहा है...',
@@ -247,7 +330,7 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     shareOnWhatsApp: 'व्हाट्सएप पर साझा करें',
     pasteInWhatsApp: 'कॉपी किया गया! अब अपनी चैट में पेस्ट करें।',
     businessProfile: 'बिजनेस प्रोफाइल',
-    todaysVisitors: "आज के आगंतुक",
+    todaysVisitors: 'आज के आगंतुक',
     campaignLaunches: 'अभियान लॉन्च',
     mostViewedPages: 'सबसे ज्यादा देखे गए पेज',
     latestReviews: 'नवीनतम समीक्षाएं',
@@ -267,7 +350,8 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
     dashboardPrompt: 'अपना व्यावसायिक डेटा यहां देखने के लिए पहले अपनी वेबसाइट बनाएं।',
     goToGenerator: 'जेनरेटर पर जाएं',
     aiAnalysis: 'एआई विश्लेषण',
-    aiAnalysisSubtext: 'एआई को आपके डैशबोर्ड का विश्लेषण करने दें और आपको आपकी चुनी हुई भाषा में एक मौखिक सारांश दें।',
+    aiAnalysisSubtext:
+      'एआई को आपके डैशबोर्ड का विश्लेषण करने दें और आपको आपकी चुनी हुई भाषा में एक मौखिक सारांश दें।',
     analyzeAndSpeak: 'विश्लेषण करें और बोलें',
     analyzing: 'विश्लेषण हो रहा है...',
     stopSpeaking: 'बोलना बंद करो',
@@ -278,9 +362,21 @@ export const TRANSLATIONS: { [key: string]: { [key: string]: string } } = {
 
 export const EXAMPLE_PROMPTS = [
   { label: 'Select an example...', prompt: '' },
-  { label: 'Coffee Shop', prompt: 'I need a website for my coffee shop in Brooklyn. We sell organic coffee and pastries. I want a modern and minimalist design.' },
-  { label: 'Personal Portfolio', prompt: 'Create a personal portfolio for a software developer named Alex Doe. It should have an about section, a projects section, and a contact form.' },
-  { label: 'Restaurant', prompt: 'A website for a family-owned Italian restaurant. Include a menu, photos of the food, and a way to book a table.' },
+  {
+    label: 'Coffee Shop',
+    prompt:
+      'I need a website for my coffee shop in Brooklyn. We sell organic coffee and pastries. I want a modern and minimalist design.',
+  },
+  {
+    label: 'Personal Portfolio',
+    prompt:
+      'Create a personal portfolio for a software developer named Alex Doe. It should have an about section, a projects section, and a contact form.',
+  },
+  {
+    label: 'Restaurant',
+    prompt:
+      'A website for a family-owned Italian restaurant. Include a menu, photos of the food, and a way to book a table.',
+  },
 ];
 
 export const PROMPT_TEMPLATE = `
