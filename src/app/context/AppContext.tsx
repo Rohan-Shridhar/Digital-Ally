@@ -54,6 +54,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPrivacyModeState(mode);
     setError(null);
   }, []);
+    let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
+    if (params) {
+      for (const [paramKey, paramValue] of Object.entries(params)) {
+        message = message.replace(`{${paramKey}}`, String(paramValue));
+      }
+    }
+    return message;
+  }, [language]);
+
+  const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
+
+  const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
+    savePrivacyPreference(mode);
+    setPrivacyModeState(mode);
+    setError(null);
+  }, []);
 
   const handleGenerateWrapper = useCallback(async (options?: { modPrompt?: string }) => {
     const formData = sanitizeFormData({
@@ -82,6 +98,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     if ('error' in result) {
+    if (result.success) {
+      if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
+        setGeneratedCode(result.code);
+        setPageState('result');
+        setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
+        setRetryCount(0);
+      } else {
+        setError(t('updateFailed'));
+        setGeneratedCode(generatedCode || '');
+        setPageState('result');
+      }
+    } else {
       setError(`Failed to generate website: ${result.error}`);
       setGeneratedCode(generatedCode || '');
       setPageState('result');
@@ -134,6 +162,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setError(`Failed to generate newsletter: ${result.error}`);
     } else {
       setNewsletter(result.newsletterText);
+    if (result.success) {
+      setNewsletter(result.newsletterText);
+    } else {
+      setError(`Failed to generate newsletter: ${result.error}`);
     }
     setIsGeneratingPost(false);
   }, [prompt, businessName, generatedUrl, t, generateNewsletterContent]);

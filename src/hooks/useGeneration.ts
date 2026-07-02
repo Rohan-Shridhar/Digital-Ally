@@ -41,6 +41,7 @@ export function useGeneration({ t }: UseGenerationProps) {
       const sanitized = sanitizeFormData(formState);
       const validation = validateSchema(websiteFormSchema, sanitized, t);
       if ('firstError' in validation) {
+      if (!validation.success) {
         return { success: false, error: validation.firstError };
       }
 
@@ -84,6 +85,7 @@ export function useGeneration({ t }: UseGenerationProps) {
       const sanitized = sanitizeFormData(formState);
       const validation = validateSchema(newsletterFormSchema, sanitized, t);
       if ('firstError' in validation) {
+      if (!validation.success) {
         return { success: false, error: validation.firstError };
       }
 

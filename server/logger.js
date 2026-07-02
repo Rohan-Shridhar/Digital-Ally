@@ -1,21 +1,14 @@
+import { recordAuditEvent } from './auditLog.js';
+
 /**
- * Structured JSON logger middleware
- * Logs request details to stdout when response finishes
+ * Structured JSON logger middleware for AI gateway routes.
+ * Logs request metadata and response size to stdout and the in-memory audit log.
  */
-
-function createLogger() {
+export function createLogger({ taskResolver } = {}) {
   return (req, res, next) => {
-    // Capture start time
     const startTime = Date.now();
-
-    // Capture original end and finish handlers
-    const originalEnd = res.end;
-    const originalWrite = res.write;
-
-    // Track if we've already logged (to avoid double logging)
     let logged = false;
 
-    // Function to log the request
     const logRequest = () => {
       if (logged) return;
       logged = true;
@@ -26,29 +19,32 @@ function createLogger() {
       const endpoint = req.path;
       const promptLength = req.body?.prompt?.length || 0;
       const statusCode = res.statusCode;
+      const task = taskResolver?.(req) || req.body?.task || 'unknown';
+      const responseSizeBytes = res.locals?.responseSizeBytes ?? 0;
+      const model = res.locals?.modelUsed || null;
+      const success = statusCode >= 200 && statusCode < 400;
 
       const logEntry = {
-        timestamp: new Date().toISOString(),
+        event: success ? 'ai.request' : 'ai.failure',
         ip,
         clientId,
         endpoint,
+        task,
         promptLength,
+        responseSizeBytes,
+        model,
         statusCode,
         durationMs,
+        consentVersion: req.get('X-AI-Consent') || null,
+        quota: req.quotaInfo || null,
       };
 
-      // Write structured JSON to stdout
       console.log(JSON.stringify(logEntry));
+      recordAuditEvent(logEntry);
     };
 
-    // Hook into response finish event
     res.on('finish', logRequest);
-
-    // Also hook into close event in case finish doesn't fire
     res.on('close', logRequest);
-
     next();
   };
 }
-
-module.exports = { createLogger };
