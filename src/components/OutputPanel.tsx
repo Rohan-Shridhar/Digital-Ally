@@ -39,6 +39,7 @@ export const OutputPanel: React.FC = () => {
     handleRetry,
     modificationPrompt,
     setModificationPrompt,
+    healthStatus,
   } = context!;
 
   const { html: safeHtml, hadUnsafeContent } = useMemo(
@@ -250,9 +251,12 @@ export const OutputPanel: React.FC = () => {
         </SectionCard>
 
         <SectionCard title="Marketing" subtitle="Generate a newsletter based on your website" className="mb-6">
+          {healthStatus.checked && !healthStatus.ok && (
+            <p className="mb-3 text-sm text-red-600" role="alert">{healthStatus.message}</p>
+          )}
           <button
             onClick={handleGenerateNewsletter}
-            disabled={isGeneratingPost}
+            disabled={isGeneratingPost || !healthStatus.ok}
             className="w-full flex items-center justify-center gap-2 bg-lime-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-lime-700 transition disabled:bg-gray-400"
           >
             {isGeneratingPost ? <LoadingSpinner className="w-5 h-5" /> : null}
