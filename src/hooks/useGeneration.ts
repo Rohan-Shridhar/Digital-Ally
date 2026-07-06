@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { generateWebsite, generateNewsletter } from '@/features/generation/geminiService';
+import { generateWebsite, generateNewsletter } from '@/services/geminiService';
 import { COLOR_PALETTES } from '@/shared/constants';
 import { sanitizeFormData, validateSchema } from '@/shared/validation';
 import { websiteFormSchema, newsletterFormSchema } from '@/shared/validation';

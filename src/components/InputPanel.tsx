@@ -24,7 +24,7 @@ export const InputPanel: React.FC = () => {
         t, userName, setUserName, businessName, setBusinessName, userEmail, setUserEmail, 
         userPhone, setUserPhone, prompt, setPrompt, selectedPalette, setSelectedPalette,
         handleGenerate, language, error, services, setServices, location, setLocation,
-        themeColor, setThemeColor
+        themeColor, setThemeColor, healthStatus
     } = context;
 
     const formValues = {
@@ -76,7 +76,7 @@ export const InputPanel: React.FC = () => {
         });
     }, [detailsComplete, descriptionComplete, servicesComplete]);
 
-    const canGenerate = isFormValid;
+    const canGenerate = isFormValid && healthStatus.ok;
 
     const onSubmit = useCallback(() => {
         const result = validateAll();
@@ -335,6 +335,12 @@ export const InputPanel: React.FC = () => {
                         {error && <p className="text-red-500 mt-6 text-center font-medium" role="alert">{error}</p>}
 
                         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+                            {!healthStatus.checked && (
+                                <p className="text-sm text-gray-500 mb-3">Checking Gemini API availability…</p>
+                            )}
+                            {healthStatus.checked && !healthStatus.ok && (
+                                <p className="text-sm text-red-600 mb-3" role="alert">{healthStatus.message}</p>
+                            )}
                             <button
                                 type="button"
                                 onClick={onSubmit}
