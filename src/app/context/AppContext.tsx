@@ -1,10 +1,14 @@
 import React, { useState, useCallback, createContext } from 'react';
 import { useGeneration } from '@/hooks/useGeneration';
-import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '@/shared/constants';
+import { LANGUAGES, TRANSLATIONS } from '@/shared/constants';
 import { AppContextType } from '@/shared/types';
-import { AiProcessingMode, clearPrivacyPreference, loadPrivacyPreference, savePrivacyPreference } from '@/shared/privacy';
 import {
-  websiteFormSchema,
+  AiProcessingMode,
+  clearPrivacyPreference,
+  loadPrivacyPreference,
+  savePrivacyPreference,
+} from '@/shared/privacy';
+import {
   modificationSchema,
   newsletterFormSchema,
   sanitizeFormData,
@@ -37,31 +41,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [lastPrompt, setLastPrompt] = useState('');
   const [retryCount, setRetryCount] = useState(0);
 
-  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-    let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
-    if (params) {
-      for (const [paramKey, paramValue] of Object.entries(params)) {
-        message = message.replace(`{${paramKey}}`, String(paramValue));
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>): string => {
+      let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
+      if (params) {
+        for (const [paramKey, paramValue] of Object.entries(params)) {
+          message = message.replace(`{${paramKey}}`, String(paramValue));
+        }
       }
-    }
-    return message;
-  }, [language]);
-
-  const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
-
-  const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
-    savePrivacyPreference(mode);
-    setPrivacyModeState(mode);
-    setError(null);
-  }, []);
-    let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
-    if (params) {
-      for (const [paramKey, paramValue] of Object.entries(params)) {
-        message = message.replace(`{${paramKey}}`, String(paramValue));
-      }
-    }
-    return message;
-  }, [language]);
+      return message;
+    },
+    [language]
+  );
 
   const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
 
@@ -71,64 +62,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setError(null);
   }, []);
 
-  const handleGenerateWrapper = useCallback(async (options?: { modPrompt?: string }) => {
-    const formData = sanitizeFormData({
-      userName,
-      businessName,
-      userEmail,
-      userPhone,
-      prompt,
-      services,
-      location,
-      themeColor,
-      selectedPalette,
-    });
+  const handleGenerateWrapper = useCallback(
+    async (options?: { modPrompt?: string }) => {
+      const formData = sanitizeFormData({
+        userName,
+        businessName,
+        userEmail,
+        userPhone,
+        prompt,
+        services,
+        location,
+        themeColor,
+        selectedPalette,
+      });
 
-    setLastPrompt(prompt);
-    setPageState('loading');
-    setError(null);
-    setGeneratedUrl('');
-    setNewsletter('');
+      setLastPrompt(prompt);
+      setPageState('loading');
+      setError(null);
+      setGeneratedUrl('');
+      setNewsletter('');
 
-    const result = await generateWebsiteContent(formData, options?.modPrompt, {
-      onRetry: (attempt, err) => {
-        setRetryCount(attempt);
-        setError(err.message);
-      },
-    });
+      const result = await generateWebsiteContent(formData, options?.modPrompt, {
+        onRetry: (attempt, err) => {
+          setRetryCount(attempt);
+          setError(err.message);
+        },
+      });
 
-    if ('error' in result) {
-    if (result.success) {
-      if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
-        setGeneratedCode(result.code);
+      if ('error' in result) {
+        setError(`Failed to generate website: ${result.error}`);
+        setGeneratedCode(generatedCode || '');
         setPageState('result');
-        setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
-        setRetryCount(0);
+        setRetryCount((prev) => prev + 1);
+      } else if (result.success) {
+        if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
+          setGeneratedCode(result.code);
+          setPageState('result');
+          setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
+          setRetryCount(0);
+        } else {
+          setError(t('updateFailed'));
+          setGeneratedCode(generatedCode || '');
+          setPageState('result');
+        }
       } else {
         setError(t('updateFailed'));
         setGeneratedCode(generatedCode || '');
         setPageState('result');
       }
-    } else {
-      setError(`Failed to generate website: ${result.error}`);
-      setGeneratedCode(generatedCode || '');
-      setPageState('result');
-      setRetryCount((prev) => prev + 1);
-    } else if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
-      setGeneratedCode(result.code);
-      setPageState('result');
-      setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
-      setRetryCount(0);
-    } else {
-      setError(t('updateFailed'));
-      setGeneratedCode(generatedCode || '');
-      setPageState('result');
-    }
 
-    if (options?.modPrompt) {
-      setModificationPrompt('');
-    }
-  }, [prompt, userName, businessName, userEmail, userPhone, selectedPalette, services, location, themeColor, generatedCode, t, generateWebsiteContent]);
+      if (options?.modPrompt) {
+        setModificationPrompt('');
+      }
+    },
+    [
+      prompt,
+      userName,
+      businessName,
+      userEmail,
+      userPhone,
+      selectedPalette,
+      services,
+      location,
+      themeColor,
+      generatedCode,
+      t,
+      generateWebsiteContent,
+    ]
+  );
 
   const handleGenerate = () => handleGenerateWrapper();
 
@@ -138,11 +139,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitizeFormData({ modificationPrompt }),
       t
     );
+
     if (validation.success === false) {
       setError(validation.firstError);
       return;
     }
-    handleGenerateWrapper({ modPrompt: validation.data.modificationPrompt });
+
+    await handleGenerateWrapper({ modPrompt: validation.data.modificationPrompt });
   }, [modificationPrompt, handleGenerateWrapper, t]);
 
   const handleGenerateNewsletter = useCallback(async () => {
@@ -151,23 +154,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitizeFormData({ prompt, businessName, generatedUrl }),
       t
     );
+
     if (validation.success === false) {
       setError(validation.firstError);
       return;
     }
+
     setIsGeneratingPost(true);
     setError(null);
-    const result = await generateNewsletterContent({ prompt, businessName });
-    if ('error' in result) {
-      setError(`Failed to generate newsletter: ${result.error}`);
-    } else {
-      setNewsletter(result.newsletterText);
-    if (result.success) {
-      setNewsletter(result.newsletterText);
-    } else {
-      setError(`Failed to generate newsletter: ${result.error}`);
+
+    try {
+      const result = await generateNewsletterContent({ prompt, businessName });
+
+      if ('error' in result) {
+        setError(`Failed to generate newsletter: ${result.error}`);
+      } else if (result.success) {
+        setNewsletter(result.newsletterText);
+      } else {
+        setError(`Failed to generate newsletter: ${result.error}`);
+      }
+    } finally {
+      setIsGeneratingPost(false);
     }
-    setIsGeneratingPost(false);
   }, [prompt, businessName, generatedUrl, t, generateNewsletterContent]);
 
   const handleSelectExample = (examplePrompt: string) => {
@@ -180,6 +188,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setError('Maximum retry attempts reached. Please try again with different inputs.');
       return;
     }
+
     if (lastPrompt) {
       setPrompt(lastPrompt);
       setRetryCount((prev) => prev + 1);
