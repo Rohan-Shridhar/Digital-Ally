@@ -3,7 +3,12 @@ import { useGeneration } from '@/hooks/useGeneration';
 import { checkGeminiHealth, GeminiHealthStatus } from '@/services/geminiService';
 import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '@/shared/constants';
 import { AppContextType } from '@/shared/types';
-import { AiProcessingMode, clearPrivacyPreference, loadPrivacyPreference, savePrivacyPreference } from '@/shared/privacy';
+import {
+  AiProcessingMode,
+  clearPrivacyPreference,
+  loadPrivacyPreference,
+  savePrivacyPreference,
+} from '@/shared/privacy';
 import {
   websiteFormSchema,
   modificationSchema,
@@ -42,34 +47,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     message: 'Checking Gemini API availability…',
   });
 
-  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-    let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
-    if (params) {
-      for (const [paramKey, paramValue] of Object.entries(params)) {
-        message = message.replace(`{${paramKey}}`, String(paramValue));
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>): string => {
+      let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
+      if (params) {
+        for (const [paramKey, paramValue] of Object.entries(params)) {
+          message = message.replace(`{${paramKey}}`, String(paramValue));
+        }
       }
-    }
-    return message;
-  }, [language]);
+      return message;
+    },
+    [language]
+  );
 
   const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
-
-  useEffect(() => {
-    let active = true;
-
-    const validateHealth = async () => {
-      const result = await checkGeminiHealth({ retries: 3, delayMs: 1000 });
-      if (active) {
-        setHealthStatus(result);
-      }
-    };
-
-    validateHealth();
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
     savePrivacyPreference(mode);
@@ -77,60 +68,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setError(null);
   }, []);
 
-  const handleGenerateWrapper = useCallback(async (options?: { modPrompt?: string }) => {
-    if (!healthStatus.ok) {
-      setError(healthStatus.message);
-      setPageState('form');
-      return;
-    }
+  const handleGenerateWrapper = useCallback(
+    async (options?: { modPrompt?: string }) => {
+      const formData = sanitizeFormData({
+        userName,
+        businessName,
+        userEmail,
+        userPhone,
+        prompt,
+        services,
+        location,
+        themeColor,
+        selectedPalette,
+      });
 
-    const formData = sanitizeFormData({
+      setLastPrompt(prompt);
+      setPageState('loading');
+      setError(null);
+      setGeneratedUrl('');
+      setNewsletter('');
+
+      const result = await generateWebsiteContent(formData, options?.modPrompt, {
+        onRetry: (attempt, err) => {
+          setRetryCount(attempt);
+          setError(err.message);
+        },
+      });
+
+      if (result.success) {
+        if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
+          setGeneratedCode(result.code);
+          setPageState('result');
+          setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
+          setRetryCount(0);
+        } else {
+          setError(t('updateFailed'));
+          setGeneratedCode(generatedCode || '');
+          setPageState('result');
+        }
+      } else {
+        setError(`Failed to generate website: ${result.error}`);
+        setGeneratedCode(generatedCode || '');
+        setPageState('result');
+        setRetryCount((prev) => prev + 1);
+      }
+
+      if (options?.modPrompt) {
+        setModificationPrompt('');
+      }
+    },
+    [
+      prompt,
       userName,
       businessName,
       userEmail,
       userPhone,
-      prompt,
+      selectedPalette,
       services,
       location,
       themeColor,
-      selectedPalette,
-    });
-
-    setLastPrompt(prompt);
-    setPageState('loading');
-    setError(null);
-    setGeneratedUrl('');
-    setNewsletter('');
-
-    const result = await generateWebsiteContent(formData, options?.modPrompt, {
-      onRetry: (attempt, err) => {
-        setRetryCount(attempt);
-        setError(err.message);
-      },
-    });
-
-    if (result.success) {
-      if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
-        setGeneratedCode(result.code);
-        setPageState('result');
-        setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
-        setRetryCount(0);
-      } else {
-        setError(t('updateFailed'));
-        setGeneratedCode(generatedCode || '');
-        setPageState('result');
-      }
-    } else {
-      setError(`Failed to generate website: ${result.error}`);
-      setGeneratedCode(generatedCode || '');
-      setPageState('result');
-      setRetryCount((prev) => prev + 1);
-    }
-
-    if (options?.modPrompt) {
-      setModificationPrompt('');
-    }
-  }, [healthStatus, prompt, userName, businessName, userEmail, userPhone, selectedPalette, services, location, themeColor, generatedCode, t, generateWebsiteContent]);
+      generatedCode,
+      t,
+      generateWebsiteContent,
+    ]
+  );
 
   const handleGenerate = useCallback(() => handleGenerateWrapper(), [handleGenerateWrapper]);
 
@@ -165,20 +166,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setIsGeneratingPost(true);
     setError(null);
-
-    try {
-      const result = await generateNewsletterContent({ prompt, businessName });
-      if (result.success) {
-        setNewsletter(result.newsletterText);
-      } else {
-        setError(`Failed to generate newsletter: ${result.error}`);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An unknown error occurred.');
-    } finally {
-      setIsGeneratingPost(false);
+    const result = await generateNewsletterContent({ prompt, businessName });
+    if (result.success) {
+      setNewsletter(result.newsletterText);
+    } else {
+      setError(`Failed to generate newsletter: ${result.error}`);
     }
-  }, [healthStatus, prompt, businessName, generatedUrl, t, generateNewsletterContent]);
+    setIsGeneratingPost(false);
+  }, [prompt, businessName, generatedUrl, t, generateNewsletterContent]);
 
   const handleSelectExample = useCallback((examplePrompt: string) => {
     setPrompt(examplePrompt);
