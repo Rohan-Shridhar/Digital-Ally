@@ -1,6 +1,6 @@
 import React, { useState, useCallback, createContext, useEffect } from 'react';
 import { useGeneration } from '@/hooks/useGeneration';
-import { checkGeminiHealth, GeminiHealthStatus } from '@/services/geminiService';
+import { GeminiHealthStatus } from '@/services/geminiService';
 import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '@/shared/constants';
 import { AppContextType } from '@/shared/types';
 import {
@@ -149,11 +149,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [modificationPrompt, handleGenerateWrapper, t]);
 
   const handleGenerateNewsletter = useCallback(async () => {
-    if (!healthStatus.ok) {
-      setError(healthStatus.message);
-      return;
-    }
-
     const validation = validateSchema(
       newsletterFormSchema,
       sanitizeFormData({ prompt, businessName, generatedUrl }),
