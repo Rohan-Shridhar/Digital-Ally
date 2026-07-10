@@ -3,9 +3,13 @@ import { useGeneration } from '@/hooks/useGeneration';
 import { checkGeminiHealth, GeminiHealthStatus } from '@/services/geminiService';
 import { LANGUAGES, TRANSLATIONS, COLOR_PALETTES } from '@/shared/constants';
 import { AppContextType } from '@/shared/types';
-import { AiProcessingMode, clearPrivacyPreference, loadPrivacyPreference, savePrivacyPreference } from '@/shared/privacy';
 import {
-  websiteFormSchema,
+  AiProcessingMode,
+  clearPrivacyPreference,
+  loadPrivacyPreference,
+  savePrivacyPreference,
+} from '@/shared/privacy';
+import {
   modificationSchema,
   newsletterFormSchema,
   sanitizeFormData,
@@ -42,15 +46,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     message: 'Checking Gemini API availability…',
   });
 
-  const t = useCallback((key: string, params?: Record<string, string | number>): string => {
-    let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
-    if (params) {
-      for (const [paramKey, paramValue] of Object.entries(params)) {
-        message = message.replace(`{${paramKey}}`, String(paramValue));
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>): string => {
+      let message = TRANSLATIONS[language]?.[key] || TRANSLATIONS['en-US'][key] || key;
+      if (params) {
+        for (const [paramKey, paramValue] of Object.entries(params)) {
+          message = message.replace(`{${paramKey}}`, String(paramValue));
+        }
       }
-    }
-    return message;
-  }, [language]);
+      return message;
+    },
+    [language]
+  );
 
   const { generateWebsiteContent, generateNewsletterContent } = useGeneration({ t });
 
@@ -71,11 +78,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  const setPrivacyMode = useCallback((mode: AiProcessingMode) => {
-    savePrivacyPreference(mode);
-    setPrivacyModeState(mode);
-    setError(null);
-  }, []);
+      setLastPrompt(prompt);
+      setPageState('loading');
+      setError(null);
+      setGeneratedUrl('');
+      setNewsletter('');
 
   const handleGenerateWrapper = useCallback(async (options?: { modPrompt?: string }) => {
     if (!healthStatus.ok) {
@@ -113,8 +120,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
         setGeneratedCode(result.code);
         setPageState('result');
-        setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
-        setRetryCount(0);
+        setRetryCount((prev) => prev + 1);
+      } else if (result.success) {
+        if (result.code.trim().toLowerCase().startsWith('<!doctype html')) {
+          setGeneratedCode(result.code);
+          setPageState('result');
+          setGeneratedUrl(`data:text/html;charset=utf-8,${encodeURIComponent(result.code)}`);
+          setRetryCount(0);
+        } else {
+          setError(t('updateFailed'));
+          setGeneratedCode(generatedCode || '');
+          setPageState('result');
+        }
       } else {
         setError(t('updateFailed'));
         setGeneratedCode(generatedCode || '');
@@ -140,11 +157,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitizeFormData({ modificationPrompt }),
       t
     );
+
     if (validation.success === false) {
       setError(validation.firstError);
       return;
     }
-    handleGenerateWrapper({ modPrompt: validation.data.modificationPrompt });
+
+    await handleGenerateWrapper({ modPrompt: validation.data.modificationPrompt });
   }, [modificationPrompt, handleGenerateWrapper, t]);
 
   const handleGenerateNewsletter = useCallback(async () => {
@@ -158,6 +177,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitizeFormData({ prompt, businessName, generatedUrl }),
       t
     );
+
     if (validation.success === false) {
       setError(validation.firstError);
       return;
@@ -190,6 +210,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setError('Maximum retry attempts reached. Please try again with different inputs.');
       return;
     }
+
     if (lastPrompt) {
       setPrompt(lastPrompt);
       setRetryCount((prev) => prev + 1);
