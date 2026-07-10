@@ -72,8 +72,8 @@ export function useGeneration({ t }: UseGenerationProps) {
         logError('Website generation failed', errorMessage);
         return { success: false, error: errorMessage };
       }
-    },
-    [t]
+    }
+    ,[t]
   );
 
   const generateNewsletterContent = useCallback(

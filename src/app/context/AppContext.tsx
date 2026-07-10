@@ -10,7 +10,12 @@ import {
   savePrivacyPreference,
 } from '@/shared/privacy';
 import {
-  websiteFormSchema,
+  AiProcessingMode,
+  clearPrivacyPreference,
+  loadPrivacyPreference,
+  savePrivacyPreference,
+} from '@/shared/privacy';
+import {
   modificationSchema,
   newsletterFormSchema,
   sanitizeFormData,
@@ -141,11 +146,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitizeFormData({ modificationPrompt }),
       t
     );
+
     if (validation.success === false) {
       setError(validation.firstError);
       return;
     }
-    handleGenerateWrapper({ modPrompt: validation.data.modificationPrompt });
+
+    await handleGenerateWrapper({ modPrompt: validation.data.modificationPrompt });
   }, [modificationPrompt, handleGenerateWrapper, t]);
 
   const handleGenerateNewsletter = useCallback(async () => {
@@ -154,6 +161,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sanitizeFormData({ prompt, businessName, generatedUrl }),
       t
     );
+
     if (validation.success === false) {
       setError(validation.firstError);
       return;
@@ -180,6 +188,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setError('Maximum retry attempts reached. Please try again with different inputs.');
       return;
     }
+
     if (lastPrompt) {
       setPrompt(lastPrompt);
       setRetryCount((prev) => prev + 1);
